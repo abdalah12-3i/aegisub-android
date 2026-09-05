@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Aegisub</string>
     <string name="home_title">الترجمات</string>
     <string name="home_settings">الإعدادات</string>
     <string name="home_import">استيراد</string>
