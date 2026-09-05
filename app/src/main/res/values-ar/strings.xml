@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_title">الترجمات</string>
+    <string name="home_settings">الإعدادات</string>
+    <string name="home_import">استيراد</string>
+    <string name="home_empty">لا توجد مشاريع حتى الآن.\nاضغط + لإنشاء مشروع تجريبي أو اضغط استيراد.</string>
+    <string name="home_subtitle_fallback">ملف ترجمة مستورد</string>
+
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_back">رجوع</string>
+    <string name="settings_section_theme">المظهر</string>
+    <string name="settings_theme_system">تلقائي (حسب النظام)</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+
+    <string name="settings_section_precision">دقة وقت تصدير ASS</string>
+    <string name="settings_precision_auto">تلقائي (حسب الصيغة)</string>
+    <string name="settings_precision_two">أجزاء من مئة (H:MM:SS.cc - المعيار الأصلي)</string>
+    <string name="settings_precision_three">ميلي ثانية (H:MM:SS.mmm - 3 أرقام)</string>
+
+    <string name="settings_section_layout">مظهر المحرر</string>
+    <string name="settings_layout_auto">تلقائي حسب عرض الشاشة</string>
+    <string name="settings_layout_compact">مضغوط (قائمة + شريط سفلي)</string>
+    <string name="settings_layout_expanded">شاشتان متجاورتان (قائمة | تفاصيل)</string>
+
+    <string name="settings_section_language">لغة التطبيق</string>
+    <string name="settings_lang_system">لغة الجهاز</string>
+    <string name="settings_lang_zh">简体中文 (الصينية)</string>
+    <string name="settings_lang_en">English (الإنجليزية)</string>
+    <string name="settings_lang_ar">العربية</string>
+    <string name="settings_lang_tr">Türkçe (التركية)</string>
+
+    <string name="settings_section_about">حول التطبيق</string>
+    <string name="settings_about">عن Aegisub Android</string>
+
+    <string name="settings_section_hotkeys">اختصارات لوحة المفاتيح</string>
+    <string name="hotkey_reset_all">إعادة ضبط جميع الاختصارات</string>
+    <string name="hotkey_dialog_title">إعادة تعيين الاختصار</string>
+    <string name="hotkey_dialog_prompt">اضغط مجموعة الأزرار الجديدة للإجراء \"%1$s\"…</string>
+    <string name="hotkey_dialog_cancel">إلغاء</string>
+
+    <string name="hotkey_undo">تراجع</string>
+    <string name="hotkey_redo">إعادة</string>
+    <string name="hotkey_save">حفظ</string>
+    <string name="hotkey_export">تصدير</string>
+    <string name="hotkey_find_replace">بحث واستبدال</string>
+    <string name="hotkey_duplicate_line">تكرار السطر</string>
+    <string name="hotkey_delete_line">حذف السطر</string>
+    <string name="hotkey_split_line">تقسيم السطر</string>
+    <string name="hotkey_join_keep_first">دمج (إبقاء الأول)</string>
+    <string name="hotkey_join_concat">دمج (ربط النصوص)</string>
+    <string name="hotkey_move_line_up">تحريك السطر لأعلى</string>
+    <string name="hotkey_move_line_down">تحريك السطر لأسفل</string>
+    <string name="hotkey_insert_after">إدراج سطر بعده</string>
+    <string name="hotkey_select_prev">السطر السابق</string>
+    <string name="hotkey_select_next">السطر التالي</string>
+    <string name="hotkey_play_pause">تشغيل / إيقاف مؤقت</string>
+    <string name="hotkey_seek_back">ترجيع 5 ثوانٍ</string>
+    <string name="hotkey_seek_forward">تقديم 5 ثوانٍ</string>
+    <string name="hotkey_frame_back">إطار للخلف</string>
+    <string name="hotkey_frame_forward">إطار للأمام</string>
+    <string name="hotkey_set_start_to_pos">تعيين البداية عند المؤشر</string>
+    <string name="hotkey_set_end_to_pos">تعيين النهاية عند المؤشر</string>
+
+    <string name="about_title">حول التطبيق</string>
+    <string name="about_app_name">Aegisub Android</string>
+    <string name="about_tagline">محرر ترجمة احترافي للأندرويد، الأقرب لتجربة Aegisub المكتبي.</string>
+    <string name="about_author_label">المطور / الصيانة</string>
+    <string name="about_author_value">Aegisub Project</string>
+    <string name="about_license_label">الترخيص</string>
+    <string name="about_license_value">BSD (ترخيص Aegisub)</string>
+    <string name="about_version_label">الإصدار</string>
+    <string name="about_based_on">مقتبس ومبني على برنامج Aegisub المكتبي للحاسوب (TypesettingTools/Aegisub، ترخيص BSD).</string>
+    <string name="about_github">مستودع GitHub</string>
+    <string name="about_github_url">https://github.com/samgum/aegisub-android</string>
+    <string name="about_open_browser">فتح في المتصفح</string>
+</resources>
