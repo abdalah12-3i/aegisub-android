@@ -48,11 +48,6 @@ import io.github.samgum.aegisub.data.settings.ThemeMode
 import io.github.samgum.aegisub.domain.edit.HotkeyAction
 import io.github.samgum.aegisub.domain.format.TimePrecision
 
-/**
- * 设置屏：主题 / 导出精度 / 布局 / 语言 / 关于。所有偏好经 DataStore 持久化。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -113,9 +108,11 @@ fun SettingsScreen(
             OptionRow(stringResource(R.string.settings_lang_system), selected = langCode == "system") { viewModel.setLangCode("system") }
             OptionRow(stringResource(R.string.settings_lang_zh), selected = langCode == "zh") { viewModel.setLangCode("zh") }
             OptionRow(stringResource(R.string.settings_lang_en), selected = langCode == "en") { viewModel.setLangCode("en") }
+            OptionRow(stringResource(R.string.settings_lang_ar), selected = langCode == "ar") { viewModel.setLangCode("ar") }
+            OptionRow(stringResource(R.string.settings_lang_tr), selected = langCode == "tr") { viewModel.setLangCode("tr") }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            SectionTitle("热键")
+            SectionTitle(stringResource(R.string.settings_section_hotkeys))
             HotkeyAction.values().forEach { action ->
                 val combo = hotkeys[action]
                 ListItem(
@@ -124,7 +121,7 @@ fun SettingsScreen(
                     modifier = Modifier.clickable { capturingAction = action },
                 )
             }
-            TextButton(onClick = { hotkeyVM.resetAll() }) { Text("重置全部热键") }
+            TextButton(onClick = { hotkeyVM.resetAll() }) { Text(stringResource(R.string.hotkey_reset_all)) }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionTitle(stringResource(R.string.settings_section_about))
@@ -135,11 +132,10 @@ fun SettingsScreen(
             )
         }
     }
-    // 热键捕获对话框：按下任意键组合即绑定为该动作的新热键
     capturingAction?.let { action ->
         AlertDialog(
             onDismissRequest = { capturingAction = null },
-            title = { Text("重新绑定热键") },
+            title = { Text(stringResource(R.string.hotkey_dialog_title)) },
             text = {
                 Box(
                     Modifier.fillMaxWidth().onPreviewKeyEvent { e ->
@@ -153,38 +149,38 @@ fun SettingsScreen(
                         } else false
                     }.padding(16.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("为「${action.label()}」按下新的键组合…") }
+                ) { Text(stringResource(R.string.hotkey_dialog_prompt, action.label())) }
             },
             confirmButton = {},
-            dismissButton = { TextButton(onClick = { capturingAction = null }) { Text("取消") } },
+            dismissButton = { TextButton(onClick = { capturingAction = null }) { Text(stringResource(R.string.hotkey_dialog_cancel)) } },
         )
     }
 }
 
-/** 热键动作中文名。 */
+@Composable
 private fun HotkeyAction.label(): String = when (this) {
-    HotkeyAction.UNDO -> "撤销"
-    HotkeyAction.REDO -> "重做"
-    HotkeyAction.SAVE -> "保存"
-    HotkeyAction.EXPORT -> "导出"
-    HotkeyAction.FIND_REPLACE -> "查找替换"
-    HotkeyAction.DUPLICATE_LINE -> "复制行"
-    HotkeyAction.DELETE_LINE -> "删除行"
-    HotkeyAction.SPLIT_LINE -> "分割行"
-    HotkeyAction.JOIN_KEEP_FIRST -> "合并（留首）"
-    HotkeyAction.JOIN_CONCAT -> "合并（拼接）"
-    HotkeyAction.MOVE_LINE_UP -> "上移行"
-    HotkeyAction.MOVE_LINE_DOWN -> "下移行"
-    HotkeyAction.INSERT_AFTER -> "后插行"
-    HotkeyAction.SELECT_PREV -> "上行"
-    HotkeyAction.SELECT_NEXT -> "下行"
-    HotkeyAction.PLAY_PAUSE -> "播放/暂停"
-    HotkeyAction.SEEK_BACK -> "后退 5s"
-    HotkeyAction.SEEK_FORWARD -> "前进 5s"
-    HotkeyAction.FRAME_BACK -> "逐帧后退"
-    HotkeyAction.FRAME_FORWARD -> "逐帧前进"
-    HotkeyAction.SET_START_TO_POS -> "设起始"
-    HotkeyAction.SET_END_TO_POS -> "设结束"
+    HotkeyAction.UNDO -> stringResource(R.string.hotkey_undo)
+    HotkeyAction.REDO -> stringResource(R.string.hotkey_redo)
+    HotkeyAction.SAVE -> stringResource(R.string.hotkey_save)
+    HotkeyAction.EXPORT -> stringResource(R.string.hotkey_export)
+    HotkeyAction.FIND_REPLACE -> stringResource(R.string.hotkey_find_replace)
+    HotkeyAction.DUPLICATE_LINE -> stringResource(R.string.hotkey_duplicate_line)
+    HotkeyAction.DELETE_LINE -> stringResource(R.string.hotkey_delete_line)
+    HotkeyAction.SPLIT_LINE -> stringResource(R.string.hotkey_split_line)
+    HotkeyAction.JOIN_KEEP_FIRST -> stringResource(R.string.hotkey_join_keep_first)
+    HotkeyAction.JOIN_CONCAT -> stringResource(R.string.hotkey_join_concat)
+    HotkeyAction.MOVE_LINE_UP -> stringResource(R.string.hotkey_move_line_up)
+    HotkeyAction.MOVE_LINE_DOWN -> stringResource(R.string.hotkey_move_line_down)
+    HotkeyAction.INSERT_AFTER -> stringResource(R.string.hotkey_insert_after)
+    HotkeyAction.SELECT_PREV -> stringResource(R.string.hotkey_select_prev)
+    HotkeyAction.SELECT_NEXT -> stringResource(R.string.hotkey_select_next)
+    HotkeyAction.PLAY_PAUSE -> stringResource(R.string.hotkey_play_pause)
+    HotkeyAction.SEEK_BACK -> stringResource(R.string.hotkey_seek_back)
+    HotkeyAction.SEEK_FORWARD -> stringResource(R.string.hotkey_seek_forward)
+    HotkeyAction.FRAME_BACK -> stringResource(R.string.hotkey_frame_back)
+    HotkeyAction.FRAME_FORWARD -> stringResource(R.string.hotkey_frame_forward)
+    HotkeyAction.SET_START_TO_POS -> stringResource(R.string.hotkey_set_start_to_pos)
+    HotkeyAction.SET_END_TO_POS -> stringResource(R.string.hotkey_set_end_to_pos)
 }
 
 @Composable
