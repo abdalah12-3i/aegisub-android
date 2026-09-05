@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_title">Altyazılar</string>
+    <string name="home_settings">Ayarlar</string>
+    <string name="home_import">İçe Aktar</string>
+    <string name="home_empty">Henüz proje yok.\nÖrnek proje oluşturmak için +\'ya veya İçe Aktar\'a dokunun.</string>
+    <string name="home_subtitle_fallback">İçe aktarılan altyazı</string>
+
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_back">Geri</string>
+    <string name="settings_section_theme">Tema</string>
+    <string name="settings_theme_system">Sistem varsayılanı</string>
+    <string name="settings_theme_light">Açık</string>
+    <string name="settings_theme_dark">Koyu</string>
+
+    <string name="settings_section_precision">ASS dışa aktarma zaman hassasiyeti</string>
+    <string name="settings_precision_auto">Otomatik (biçime göre)</string>
+    <string name="settings_precision_two">Salise (H:MM:SS.cc, standart ASS)</string>
+    <string name="settings_precision_three">Milisaniye (H:MM:SS.mmm, 3 basamak)</string>
+
+    <string name="settings_section_layout">Düzenleyici görünümü</string>
+    <string name="settings_layout_auto">Ekran genişliğine göre otomatik</string>
+    <string name="settings_layout_compact">Kompakt (liste + alt çubuk)</string>
+    <string name="settings_layout_expanded">Çift bölmeli (liste | ayrıntılar)</string>
+
+    <string name="settings_section_language">Uygulama Dili</string>
+    <string name="settings_lang_system">Sistem dili</string>
+    <string name="settings_lang_zh">简体中文 (Çince)</string>
+    <string name="settings_lang_en">English (İngilizce)</string>
+    <string name="settings_lang_ar">العربية (Arapça)</string>
+    <string name="settings_lang_tr">Türkçe</string>
+
+    <string name="settings_section_about">Hakkında</string>
+    <string name="settings_about">Aegisub Android Hakkında</string>
+
+    <string name="settings_section_hotkeys">Kısayol Tuşları</string>
+    <string name="hotkey_reset_all">Tüm kısayolları sıfırla</string>
+    <string name="hotkey_dialog_title">Kısayolu Değiştir</string>
+    <string name="hotkey_dialog_prompt">\"%1$s\" işlemi için yeni bir tuş kombinasyonuna basın…</string>
+    <string name="hotkey_dialog_cancel">İptal</string>
+
+    <string name="hotkey_undo">Geri Al</string>
+    <string name="hotkey_redo">Yinele</string>
+    <string name="hotkey_save">Kaydet</string>
+    <string name="hotkey_export">Dışa Aktar</string>
+    <string name="hotkey_find_replace">Bul ve Değiştir</string>
+    <string name="hotkey_duplicate_line">Satırı Çoğalt</string>
+    <string name="hotkey_delete_line">Satırı Sil</string>
+    <string name="hotkey_split_line">Satırı Böl</string>
+    <string name="hotkey_join_keep_first">Birleştir (İlkini Koru)</string>
+    <string name="hotkey_join_concat">Birleştir (Metinleri Ekle)</string>
+    <string name="hotkey_move_line_up">Satırı Yukarı Taşı</string>
+    <string name="hotkey_move_line_down">Satırı Aşağı Taşı</string>
+    <string name="hotkey_insert_after">Sonrasına Satır Ekle</string>
+    <string name="hotkey_select_prev">Önceki Satır</string>
+    <string name="hotkey_select_next">Sonraki Satır</string>
+    <string name="hotkey_play_pause">Oynat / Duraklat</string>
+    <string name="hotkey_seek_back">5 sn Geri Sar</string>
+    <string name="hotkey_seek_forward">5 sn İleri Sar</string>
+    <string name="hotkey_frame_back">Bir Kare Geri</string>
+    <string name="hotkey_frame_forward">Bir Kare İleri</string>
+    <string name="hotkey_set_start_to_pos">Başlangıcı Buraya Ayarla</string>
+    <string name="hotkey_set_end_to_pos">Bitişi Buraya Ayarla</string>
+
+    <string name="about_title">Hakkında</string>
+    <string name="about_app_name">Aegisub Android</string>
+    <string name="about_tagline">Masaüstü Aegisub deneyimine en yakın, Android için profesyonel altyazı düzenleyici.</string>
+    <string name="about_author_label">Geliştirici / Bakım</string>
+    <string name="about_author_value">Aegisub Project</string>
+    <string name="about_license_label">Lisans</string>
+    <string name="about_license_value">BSD (Aegisub Lisansı)</string>
+    <string name="about_version_label">Sürüm</string>
+    <string name="about_based_on">Masaüstü Aegisub\'dan (TypesettingTools/Aegisub, BSD) referans alınmış ve uyarlanmıştır.</string>
+    <string name="about_github">GitHub Deposu</string>
+    <string name="about_github_url">https://github.com/samgum/aegisub-android</string>
+    <string name="about_open_browser">Tarayıcıda Aç</string>
+</resources>
