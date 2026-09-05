@@ -16,12 +16,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * 设置屏 ViewModel：暴露主题 / 导出精度 / 布局 / 语言，并提供切换。
- * 语言切换经 [AppCompatDelegate.setApplicationLocales] 应用 per-app locale（minSdk 26 兼容）。
- *
- * @author 伤感咩吖
- */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repo: SettingsRepository,
@@ -39,7 +33,6 @@ class SettingsViewModel @Inject constructor(
         .map { it.layoutMode }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LayoutMode.AUTO)
 
-    /** 界面语言代码：system / zh / en。 */
     val langCode: StateFlow<String> = repo.settings
         .map { it.langCode }
         .stateIn(viewModelScope, SharingStarted.Eagerly, "system")
@@ -56,9 +49,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { repo.setLayoutMode(mode) }
     }
 
-    /**
-     * 切换界面语言：持久化 + 经 AppCompatDelegate 应用（空列表 = 跟随系统）。
-     */
     fun setLangCode(code: String) {
         viewModelScope.launch {
             repo.setLangCode(code)
@@ -69,6 +59,8 @@ class SettingsViewModel @Inject constructor(
     private fun localeList(code: String): LocaleListCompat = when (code) {
         "zh" -> LocaleListCompat.forLanguageTags("zh")
         "en" -> LocaleListCompat.forLanguageTags("en")
-        else -> LocaleListCompat.getEmptyLocaleList() // 跟随系统
+        "ar" -> LocaleListCompat.forLanguageTags("ar")
+        "tr" -> LocaleListCompat.forLanguageTags("tr")
+        else -> LocaleListCompat.getEmptyLocaleList()
     }
 }
