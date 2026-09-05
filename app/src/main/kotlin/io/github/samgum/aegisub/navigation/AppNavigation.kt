@@ -22,28 +22,23 @@ import io.github.samgum.aegisub.ui.settings.SettingsScreen
 import io.github.samgum.aegisub.ui.settings.SettingsViewModel
 import io.github.samgum.aegisub.ui.theme.AegisubTheme
 
-/** 主屏路由常量。 */
 private const val HOME_ROUTE = "home"
 private const val SETTINGS_ROUTE = "settings"
 private const val ABOUT_ROUTE = "about"
 
-/**
- * 应用导航图：home（项目列表）↔ settings（设置）↔ about（关于）↔ editor（字幕编辑器）↔ preview（视频预览）。
- * 最外层按用户主题偏好套 [AegisubTheme]；语言偏好经 AppCompatDelegate 应用 per-app locale。
- *
- * @author 伤感咩吖
- */
 @Composable
 fun AppNavigation() {
     val settings: SettingsViewModel = hiltViewModel()
     val themeMode by settings.themeMode.collectAsStateWithLifecycle()
     val langCode by settings.langCode.collectAsStateWithLifecycle()
-    // 冷启动时把持久化的语言偏好同步到 per-app locale
+
     LaunchedEffect(langCode) {
         AppCompatDelegate.setApplicationLocales(
             when (langCode) {
                 "zh" -> LocaleListCompat.forLanguageTags("zh")
                 "en" -> LocaleListCompat.forLanguageTags("en")
+                "ar" -> LocaleListCompat.forLanguageTags("ar")
+                "tr" -> LocaleListCompat.forLanguageTags("tr")
                 else -> LocaleListCompat.getEmptyLocaleList()
             },
         )
