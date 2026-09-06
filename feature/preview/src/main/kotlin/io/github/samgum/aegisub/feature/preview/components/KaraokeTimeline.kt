@@ -29,15 +29,6 @@ import androidx.compose.ui.unit.dp
 import io.github.samgum.aegisub.domain.edit.KaraokeSyllables
 import kotlin.math.roundToInt
 
-/**
- * Karaoke 音节时间轴（复刻桌面 Aegisub Karaoke 模式逐音节计时）：
- * 把选中行 {\k}/{\kf} 音节渲染为按时长成比例的色块，拖拽块间分隔条即在相邻音节间
- * 挪动时长（厘秒），松手提交重建文本（单撤销点）。每音节至少 1cs。
- *
- * 无 karaoke 标签时显示提示（提示先用工具箱生成）。
- *
- * @author 伤感咩吖
- */
 @Composable
 fun KaraokeTimeline(
     text: String,
@@ -47,7 +38,7 @@ fun KaraokeTimeline(
     val parsed = remember(text) { KaraokeSyllables.parse(text) }
     if (parsed.isEmpty()) {
         Text(
-            "当前行无 karaoke 音节（{\\k}/{\\kf}），先在工具箱用「卡拉OK生成」。",
+            "Current line has no karaoke syllables (\\k/\\kf). Generate them first in the toolbox.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = modifier.fillMaxWidth().padding(8.dp),
@@ -72,7 +63,6 @@ fun KaraokeTimeline(
                 val leftPx = (cumCs / totalCs) * widthPx
                 val segPx = (syl.centiseconds / totalCs) * widthPx
                 cumCs += syl.centiseconds
-                // 音节色块
                 Box(
                     modifier = Modifier
                         .offset { IntOffset(leftPx.roundToInt(), 0) }
@@ -93,7 +83,6 @@ fun KaraokeTimeline(
                     }
                 }
             }
-            // 分隔拖拽条（音节 j 的左缘 = boundary j-1）
             cumCs = 0L
             for (j in 1 until durs.size) {
                 cumCs += durs[j - 1].centiseconds
@@ -122,7 +111,6 @@ fun KaraokeTimeline(
     }
 }
 
-/** 音节配色循环（深色调，白字可读）。 */
 private fun syllableColor(i: Int): Color = listOf(
     Color(0xFF3949AB), Color(0xFF00897B), Color(0xFFC0CA33),
     Color(0xFFFB8C00), Color(0xFF6D4C41), Color(0xFF8E24AA),
