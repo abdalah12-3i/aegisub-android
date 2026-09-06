@@ -28,21 +28,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.samgum.aegisub.domain.model.AssEvent
+import io.github.samgum.aegisub.feature.editor.R
 
-/**
- * 翻译助手（复刻桌面 Aegisub Translation Assistant）：
- * 逐行显示原文，输入译文，保存时把原文存入 Name(actor)、译文写入 Text，并前进。
- *
- * 原文来源：优先 Name(actor) 字段（已存过原文）；否则取当前 Text 作为原文。
- * 译文初值：若 Name 已存原文 → 当前 Text（即既有译文）；否则空（待翻译）。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TranslationAssistantSheet(
@@ -67,26 +60,25 @@ fun TranslationAssistantSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text("翻译助手", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.tool_translation), style = MaterialTheme.typography.titleLarge)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "第 ${position + 1} / $total 行",
+                        "${position + 1} / $total",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(end = 4.dp),
                     )
                     IconButton(onClick = onPrev, enabled = position > 0) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上一行")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
                     }
                     IconButton(onClick = onNext, enabled = position < total - 1) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下一行")
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
                     }
                 }
             }
 
-            // 原文（只读）
-            Text("原文", style = MaterialTheme.typography.labelLarge)
+            Text("Original", style = MaterialTheme.typography.labelLarge)
             Text(
-                text = original.ifBlank { "（空）" },
+                text = original.ifBlank { "(Empty)" },
                 style = MaterialTheme.typography.bodyLarge,
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -96,11 +88,10 @@ fun TranslationAssistantSheet(
 
             HorizontalDivider()
 
-            // 译文输入
             OutlinedTextField(
                 value = translation,
                 onValueChange = { translation = it },
-                label = { Text("译文") },
+                label = { Text("Translation") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -116,16 +107,11 @@ fun TranslationAssistantSheet(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = onDismiss) { Text("关闭") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
                 Button(onClick = { onSave(original, translation) }) {
-                    Text("保存并前进")
+                    Text("Save & Next")
                 }
             }
-            Text(
-                "保存会把原文写入 Name 字段、译文写入 Text，然后跳到下一行。可撤销。",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
