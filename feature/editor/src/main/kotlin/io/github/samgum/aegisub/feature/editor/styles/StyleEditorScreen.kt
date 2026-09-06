@@ -53,12 +53,6 @@ import io.github.samgum.aegisub.domain.model.AssColor
 import io.github.samgum.aegisub.domain.model.AssStyle
 import io.github.samgum.aegisub.feature.editor.components.EditorActions
 
-/**
- * 样式编辑器：列出工程全部样式，逐张卡片展开编辑（颜色/字体/描边/对齐/边距/编码），
- * 支持新增/删除。所有改动经 session.editStyles，与正文共用撤销栈。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StyleEditorScreen(
@@ -71,10 +65,10 @@ fun StyleEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("样式（${styles.size}）") },
+                title = { Text("Styles (${styles.size})") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -85,7 +79,7 @@ fun StyleEditorScreen(
                         onRedo = viewModel::redo,
                     )
                     IconButton(onClick = viewModel::addStyle) {
-                        Icon(Icons.Filled.Add, contentDescription = "新增样式")
+                        Icon(Icons.Filled.Add, contentDescription = "Add Style")
                     }
                 },
             )
@@ -93,7 +87,7 @@ fun StyleEditorScreen(
     ) { padding ->
         if (styles.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("暂无样式，点右上角 + 新增", style = MaterialTheme.typography.bodyLarge)
+                Text("No styles yet, tap + in top bar to add", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             LazyColumn(
@@ -123,22 +117,21 @@ private fun StyleCard(
     var confirmDelete by remember { mutableStateOf(false) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // 头部：色块 + 名称 + 展开/删除
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Box(
                     Modifier.size(20.dp).clip(CircleShape).background(style.primary.toComposeColor())
                         .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
                 )
                 Text(
-                    style.name.ifEmpty { "（未命名）" },
+                    style.name.ifEmpty { "(Unnamed)" },
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 8.dp).weight(1f),
                 )
                 IconButton(onClick = { expanded = !expanded }) {
-                    Icon(if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = "展开")
+                    Icon(if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, contentDescription = "Expand")
                 }
                 IconButton(onClick = { confirmDelete = true }) {
-                    Icon(Icons.Filled.Delete, contentDescription = "删除样式")
+                    Icon(Icons.Filled.Delete, contentDescription = "Delete Style")
                 }
             }
             AnimatedVisibility(visible = expanded) {
@@ -149,10 +142,10 @@ private fun StyleCard(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("删除样式") },
-            text = { Text("删除「${style.name.ifEmpty { "未命名" }}」？引用它的事件会变成无效样式名。此操作可撤销。") },
-            confirmButton = { TextButton(onClick = { onDelete(); confirmDelete = false }) { Text("删除") } },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("取消") } },
+            title = { Text("Delete Style") },
+            text = { Text("Delete style \"${style.name.ifEmpty { "Unnamed" }}\"? Events referencing it will use fallback style. Undo is available.") },
+            confirmButton = { TextButton(onClick = { onDelete(); confirmDelete = false }) { Text("Delete") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
         )
     }
 }
@@ -161,11 +154,11 @@ private fun StyleCard(
 @Composable
 private fun StyleFields(style: AssStyle, onUpdate: (transform: (AssStyle) -> AssStyle) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        SectionLabel("名称与字体")
+        SectionLabel("Name & Font")
         OutlinedTextField(
             value = style.name,
             onValueChange = { v -> onUpdate { it.copy(name = v) } },
-            label = { Text("样式名") },
+            label = { Text("Style Name") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -173,64 +166,64 @@ private fun StyleFields(style: AssStyle, onUpdate: (transform: (AssStyle) -> Ass
             OutlinedTextField(
                 value = style.font,
                 onValueChange = { v -> onUpdate { it.copy(font = v) } },
-                label = { Text("字体") },
+                label = { Text("Font") },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
-            NumberField("字号", style.fontSize) { v -> onUpdate { it.copy(fontSize = v) } }
+            NumberField("Size", style.fontSize) { v -> onUpdate { it.copy(fontSize = v) } }
         }
 
-        SectionLabel("颜色（点击展开调色）")
-        AssColorField("主色 Primary", style.primary) { c -> onUpdate { it.copy(primary = c) } }
-        AssColorField("次色 Secondary", style.secondary) { c -> onUpdate { it.copy(secondary = c) } }
-        AssColorField("描边 Outline", style.outline) { c -> onUpdate { it.copy(outline = c) } }
-        AssColorField("阴影 Shadow", style.shadow) { c -> onUpdate { it.copy(shadow = c) } }
+        SectionLabel("Colors (Tap to expand RGBA)")
+        AssColorField("Primary Color", style.primary) { c -> onUpdate { it.copy(primary = c) } }
+        AssColorField("Secondary Color", style.secondary) { c -> onUpdate { it.copy(secondary = c) } }
+        AssColorField("Outline Color", style.outline) { c -> onUpdate { it.copy(outline = c) } }
+        AssColorField("Shadow Color", style.shadow) { c -> onUpdate { it.copy(shadow = c) } }
 
-        SectionLabel("字形")
+        SectionLabel("Font Attributes")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ToggleChip("粗体", style.bold) { v -> onUpdate { it.copy(bold = v) } }
-            ToggleChip("斜体", style.italic) { v -> onUpdate { it.copy(italic = v) } }
-            ToggleChip("下划线", style.underline) { v -> onUpdate { it.copy(underline = v) } }
-            ToggleChip("删除线", style.strikeout) { v -> onUpdate { it.copy(strikeout = v) } }
+            ToggleChip("Bold", style.bold) { v -> onUpdate { it.copy(bold = v) } }
+            ToggleChip("Italic", style.italic) { v -> onUpdate { it.copy(italic = v) } }
+            ToggleChip("Underline", style.underline) { v -> onUpdate { it.copy(underline = v) } }
+            ToggleChip("Strikeout", style.strikeout) { v -> onUpdate { it.copy(strikeout = v) } }
         }
 
-        SectionLabel("对齐（\\an 1-9）")
+        SectionLabel("Alignment (\\an 1-9)")
         AlignmentGrid(style.alignment) { a -> onUpdate { it.copy(alignment = a) } }
 
-        SectionLabel("边距（L / R / V）")
+        SectionLabel("Margins (L / R / V)")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField("左", style.margins.left.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(left = v.toInt())) } }
-            NumberField("右", style.margins.right.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(right = v.toInt())) } }
-            NumberField("纵", style.margins.vertical.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(vertical = v.toInt())) } }
+            NumberField("Left", style.margins.left.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(left = v.toInt())) } }
+            NumberField("Right", style.margins.right.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(right = v.toInt())) } }
+            NumberField("Vert", style.margins.vertical.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(vertical = v.toInt())) } }
         }
 
-        SectionLabel("描边与阴影")
+        SectionLabel("Outline & Shadow")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField("描边宽", style.outlineWidth) { v -> onUpdate { it.copy(outlineWidth = v) } }
-            NumberField("阴影宽", style.shadowWidth) { v -> onUpdate { it.copy(shadowWidth = v) } }
+            NumberField("Outline Width", style.outlineWidth) { v -> onUpdate { it.copy(outlineWidth = v) } }
+            NumberField("Shadow Depth", style.shadowWidth) { v -> onUpdate { it.copy(shadowWidth = v) } }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = style.borderStyle == 1,
                 onClick = { onUpdate { it.copy(borderStyle = 1) } },
-                label = { Text("描边+阴影") },
+                label = { Text("Outline + Shadow") },
             )
             FilterChip(
                 selected = style.borderStyle == 3,
                 onClick = { onUpdate { it.copy(borderStyle = 3) } },
-                label = { Text("不透明底框") },
+                label = { Text("Opaque Box") },
             )
         }
 
-        SectionLabel("变换（缩放/间距/旋转）")
+        SectionLabel("Transform (Scale / Spacing / Rotation)")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField("缩放X%", style.scaleX) { v -> onUpdate { it.copy(scaleX = v) } }
-            NumberField("缩放Y%", style.scaleY) { v -> onUpdate { it.copy(scaleY = v) } }
-            NumberField("间距", style.spacing) { v -> onUpdate { it.copy(spacing = v) } }
-            NumberField("旋转°", style.angle) { v -> onUpdate { it.copy(angle = v) } }
+            NumberField("ScaleX %", style.scaleX) { v -> onUpdate { it.copy(scaleX = v) } }
+            NumberField("ScaleY %", style.scaleY) { v -> onUpdate { it.copy(scaleY = v) } }
+            NumberField("Spacing", style.spacing) { v -> onUpdate { it.copy(spacing = v) } }
+            NumberField("Angle °", style.angle) { v -> onUpdate { it.copy(angle = v) } }
         }
 
-        SectionLabel("编码")
+        SectionLabel("Encoding")
         NumberField("Encoding", style.encoding.toDouble()) { v -> onUpdate { it.copy(encoding = v.toInt()) } }
     }
 }
@@ -240,7 +233,6 @@ private fun SectionLabel(text: String) {
     Text(text, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 4.dp))
 }
 
-/** 数字输入：接受小数/整数，输入框内编辑文本，失焦或回车解析。 */
 @Composable
 private fun NumberField(label: String, value: Double, onParsed: (Double) -> Unit) {
     var text by remember(value) { mutableStateOf(value.toString()) }
@@ -261,7 +253,6 @@ private fun ToggleChip(label: String, checked: Boolean, onChange: (Boolean) -> U
     FilterChip(selected = checked, onClick = { onChange(!checked) }, label = { Text(label) })
 }
 
-/** RGBA 颜色编辑：色块 + 折叠的 R/G/B/A 滑块（0-255）。 */
 @Composable
 private fun AssColorField(label: String, color: AssColor, onChange: (AssColor) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
@@ -303,11 +294,9 @@ private fun ColorChannelSlider(label: String, value: Int, onChange: (Int) -> Uni
     }
 }
 
-/** \an 1-9 九宫对齐选择器（numpad 布局）。 */
 @Composable
 private fun AlignmentGrid(selected: Int, onSelect: (Int) -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // 行序：顶 7/8/9，中 4/5/6，底 1/2/3
         for (row in listOf(listOf(7, 8, 9), listOf(4, 5, 6), listOf(1, 2, 3))) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (a in row) {
@@ -334,5 +323,4 @@ private fun AlignCell(value: Int, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** AssColor → Compose Color（注意 ASS alpha 反转：这里 a 已是 0-255 透明度，直接用）。 */
 private fun AssColor.toComposeColor(): Color = Color(red = r / 255f, green = g / 255f, blue = b / 255f, alpha = a / 255f)
