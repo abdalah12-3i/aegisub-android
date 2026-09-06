@@ -1,32 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Main Tabs & Titles -->
+    <string name="preview_title">Preview</string>
+    <string name="preview_back">Back</string>
+    <string name="preview_change_video">Change Video</string>
+    <string name="preview_undo">Undo</string>
+    <string name="preview_redo">Redo</string>
+    <string name="preview_load_failed">Loading failed: %1$s</string>
+    <string name="preview_no_video">No video loaded</string>
+    <string name="preview_select_video">Select Video</string>
+
     <string name="preview_tab_subtitles">Subtitles</string>
     <string name="preview_tab_audio">Audio</string>
     <string name="preview_tab_timing">Timing</string>
-    <string name="preview_tab_types">Typeset</string>
+    <string name="preview_tab_types">Typesetting</string>
 
-    <string name="preview_play_pause">Play/Pause</string>
-    <string name="preview_frame_back">Frame back</string>
-    <string name="preview_frame_forward">Frame forward</string>
-    <string name="preview_no_media">No video attached</string>
-    <string name="preview_pick_video">Pick video</string>
     <string name="preview_waveform">Waveform</string>
     <string name="preview_spectrogram">Spectrogram</string>
+    <string name="preview_karaoke_timing">Karaoke Timing</string>
 
-    <string name="timing_pick_row">Select a subtitle line to time it.</string>
-    <string name="timing_set_start">Set start</string>
-    <string name="timing_set_end">Set end</string>
-    <string name="timing_prev_row">Previous line</string>
-    <string name="timing_next_row">Next line</string>
+    <string name="preview_set_start">Set Start</string>
+    <string name="preview_set_end">Set End</string>
+    <string name="preview_prev_line">Prev Line</string>
+    <string name="preview_next_line">Next Line</string>
+    <string name="timing_pick_row">Select a subtitle line from the list to adjust its timing.</string>
 
-    <string name="types_title">Visual typesetting</string>
-    <string name="types_pick_row">Select a subtitle line and attach a video to use visual typesetting.</string>
-    <string name="types_pos_mode">\\pos</string>
-    <string name="types_move_mode">\\move</string>
-    <string name="types_clear_pos">Clear \\pos</string>
-    <string name="types_clear_move">Clear \\move</string>
-    <string name="types_karaoke">Karaoke timing</string>
-    <string name="types_apply">Apply</string>
-    <string name="types_clear">Clear</string>
+    <!-- Bookmarks -->
+    <string name="preview_bookmarks">Bookmarks</string>
+    <string name="preview_add_bookmark">Add Bookmark</string>
+    <string name="preview_no_bookmarks">No bookmarks yet</string>
+    <string name="preview_jump">Jump</string>
+    <string name="preview_delete">Delete</string>
 
-    <string name="subtitle_no_text">(no text)</string>
+    <!-- Visual Typesetting -->
+    <string name="types_title">Visual Typesetting</string>
+    <string name="types_pick_row">Select a subtitle line to use visual typesetting tools.</string>
+    <string name="preview_vt_pos_hint">Visual Typesetting: drag to set \\pos</string>
+    <string name="preview_vt_move_hint">Visual Typesetting: drag start (green)/end (orange) to set \\move</string>
+    <string name="preview_pos_mode">\\pos Position</string>
+    <string name="preview_move_mode">\\move Motion</string>
+    <string name="preview_clear_pos">Clear \\pos</string>
+    <string name="preview_clear_move">Clear \\move</string>
+    <string name="preview_fade_in">Fade In (ms)</string>
+    <string name="preview_fade_out">Fade Out (ms)</string>
+    <string name="preview_apply">Apply</string>
+    <string name="preview_clear">Clear</string>
+    <string name="preview_clip_in">\\clip Inside</string>
+    <string name="preview_clip_out">\\iclip Inverse</string>
+    <string name="preview_typesetting">Typesetting</string>
+    <string name="preview_exit_typesetting">Exit Typesetting</string>
+    <string name="preview_karaoke">Karaoke</string>
+    <string name="preview_exit_karaoke">Exit Karaoke</string>
+
+    <!-- Subtitle Grid Headers -->
+    <string name="preview_grid_start">Start</string>
+    <string name="preview_grid_end">End</string>
+    <string name="preview_grid_style">Style</string>
+    <string name="preview_grid_text">Text</string>
+    <string name="subtitle_no_text">(No text)</string>
 </resources>
