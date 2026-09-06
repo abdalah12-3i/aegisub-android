@@ -98,6 +98,17 @@ import io.github.samgum.aegisub.feature.editor.components.StylingAssistantSheet
 import io.github.samgum.aegisub.feature.editor.components.TranslationAssistantSheet
 import io.github.samgum.aegisub.feature.editor.expanded.EditorTwoPane
 
+/** دالة مساعدة لتحديد اللغة المعروضة حالياً */
+@Composable
+private fun tr(en: String, ar: String, tr: String = en): String {
+    val lang = LocalConfiguration.current.locales[0]?.language ?: "en"
+    return when {
+        lang.startsWith("ar") -> ar
+        lang.startsWith("tr") -> tr
+        else -> en
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(
@@ -550,7 +561,7 @@ private fun CompactEditor(
             IconButton(onClick = onOpenPreview) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.common_preview))
             }
-            TextButton(onClick = onExport) { Text(stringResource(R.string.common_export)) }
+            TextButton(onClick = onExport) { Text(tr("Export", "تصدير", "Dışa Aktar")) }
             EditorActions(
                 canUndo = canUndo,
                 canRedo = canRedo,
@@ -592,13 +603,13 @@ private fun FindReplaceDialog(
         title = { Text(stringResource(R.string.dialog_find_replace)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Find") }, singleLine = true)
-                OutlinedTextField(value = replacement, onValueChange = { replacement = it }, label = { Text("Replace with") }, singleLine = true)
+                OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text(tr("Find", "بحث", "Bul")) }, singleLine = true)
+                OutlinedTextField(value = replacement, onValueChange = { replacement = it }, label = { Text(tr("Replace with", "استبدال بـ", "Şununla değiştir")) }, singleLine = true)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = useRegex, onCheckedChange = { useRegex = it })
-                    Text("Regex")
+                    Text(tr("Regex", "تعبير نمطي (Regex)", "Düzenli İfade"))
                     Checkbox(checked = ignoreCase, onCheckedChange = { ignoreCase = it })
-                    Text("Ignore Case")
+                    Text(tr("Ignore Case", "تجاهل حالة الأحرف", "Büyük/Küçük harf duyarsız"))
                 }
             }
         },
@@ -719,21 +730,22 @@ private fun ShiftTimesDialog(
                 OutlinedTextField(
                     value = deltaText,
                     onValueChange = { deltaText = it.filter { ch -> ch.isDigit() || ch == '-' } },
-                    label = { Text("Shift (ms, negative = earlier)") },
+                    label = { Text(tr("Shift (ms, negative = earlier)", "الإزاحة (ميلي ثانية، السالب = تقديم)", "Kaydırma (ms)")) },
                     singleLine = true,
                 )
-                Text("Target", style = MaterialTheme.typography.labelMedium)
+                Text(tr("Target", "الهدف", "Hedef"), style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    FilterChip(selected = target == ShiftTarget.BOTH, onClick = { target = ShiftTarget.BOTH }, label = { Text("Start & End") })
-                    FilterChip(selected = target == ShiftTarget.START, onClick = { target = ShiftTarget.START }, label = { Text("Start Only") })
-                    FilterChip(selected = target == ShiftTarget.END, onClick = { target = ShiftTarget.END }, label = { Text("End Only") })
+                    FilterChip(selected = target == ShiftTarget.BOTH, onClick = { target = ShiftTarget.BOTH }, label = { Text(tr("Start & End", "البداية والنهاية", "Başlangıç ve Bitiş")) })
+                    FilterChip(selected = target == ShiftTarget.START, onClick = { target = ShiftTarget.START }, label = { Text(tr("Start Only", "البداية فقط", "Yalnızca Başlangıç")) })
+                    FilterChip(selected = target == ShiftTarget.END, onClick = { target = ShiftTarget.END }, label = { Text(tr("End Only", "النهاية فقط", "Yalnızca Bitiş")) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = onlyAfter, onCheckedChange = { onlyAfter = it })
-                    Text("Only selected line and after")
+                    Text(tr("Only selected line and after", "فقط السطر المحدد وما بعده", "Yalnızca seçili satır ve sonrası"))
                 }
                 Text(
-                    if (delta >= 0) "Shift forward by ${delta}ms" else "Shift backward by ${-delta}ms (clamped at 0)",
+                    if (delta >= 0) tr("Shift forward by ${delta}ms", "تقديم للأمام بمقدار ${delta} ميلي ثانية", "${delta}ms ileri kaydır")
+                    else tr("Shift backward by ${-delta}ms", "تأخير للخلف بمقدار ${-delta} ميلي ثانية", "${-delta}ms geri kaydır"),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -759,9 +771,9 @@ private fun StyleReplaceDialog(
         title = { Text(stringResource(R.string.dialog_style_replace)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Replace all events of selected style with another style.", style = MaterialTheme.typography.bodySmall)
-                StyleDropdown("From Style", distinct, from) { from = it }
-                StyleDropdown("To Style", distinct, to) { to = it }
+                Text(tr("Replace all events of selected style with another style.", "استبدال جميع الأسطر ذات النمط المحدد بنمط آخر.", "Seçili stildeki tüm satırları başka bir stille değiştirin."))
+                StyleDropdown(tr("From Style", "النمط الحالي", "Mevcut Stil"), distinct, from) { from = it }
+                StyleDropdown(tr("To Style", "النمط الجديد", "Yeni Stil"), distinct, to) { to = it }
             }
         },
         confirmButton = {
@@ -806,20 +818,20 @@ private fun SortDialog(
     var key by remember { mutableStateOf(SortKey.START) }
     var descending by remember { mutableStateOf(false) }
     val keys = listOf(
-        SortKey.START to "Start Time",
-        SortKey.END to "End Time",
-        SortKey.STYLE to "Style",
-        SortKey.ACTOR to "Actor",
-        SortKey.EFFECT to "Effect",
-        SortKey.TEXT to "Text",
-        SortKey.LAYER to "Layer",
+        SortKey.START to tr("Start Time", "وقت البداية", "Başlangıç Zamanı"),
+        SortKey.END to tr("End Time", "وقت النهاية", "Bitiş Zamanı"),
+        SortKey.STYLE to tr("Style", "النمط", "Stil"),
+        SortKey.ACTOR to tr("Actor", "الممثل", "Oyuncu"),
+        SortKey.EFFECT to tr("Effect", "التأثير", "Efekt"),
+        SortKey.TEXT to tr("Text", "النص", "Metin"),
+        SortKey.LAYER to tr("Layer", "الطبقة", "Katman"),
     )
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_sort)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Sort By", style = MaterialTheme.typography.labelMedium)
+                Text(tr("Sort By", "ترتيب الأسطر حسب", "Sıralama Ölçütü"), style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -836,16 +848,16 @@ private fun SortDialog(
                     FilterChip(
                         selected = !descending,
                         onClick = { descending = false },
-                        label = { Text("Ascending") },
+                        label = { Text(tr("Ascending", "تصاعدي", "Artan")) },
                     )
                     FilterChip(
                         selected = descending,
                         onClick = { descending = true },
-                        label = { Text("Descending") },
+                        label = { Text(tr("Descending", "تنازلي", "Azalan")) },
                     )
                 }
                 Text(
-                    "Equal items keep relative order (stable sort). Undoable.",
+                    tr("Equal items keep relative order (stable sort). Undoable.", "تحتفظ العناصر المتساوية بترتيبها (ترتيب مستقر). قابل للتراجع.", "Eşit öğeler göreli sırayı korur."),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -873,7 +885,7 @@ private fun FramerateDialog(
         title = { Text(stringResource(R.string.dialog_framerate)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Source FPS", style = MaterialTheme.typography.labelMedium)
+                Text(tr("Source FPS", "معدل إطارات المصدر", "Kaynak FPS"), style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -882,7 +894,7 @@ private fun FramerateDialog(
                         FilterChip(selected = from == value, onClick = { from = value }, label = { Text(label) })
                     }
                 }
-                Text("Target FPS", style = MaterialTheme.typography.labelMedium)
+                Text(tr("Target FPS", "معدل إطارات الهدف", "Hedef FPS"), style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -891,11 +903,6 @@ private fun FramerateDialog(
                         FilterChip(selected = to == value, onClick = { to = value }, label = { Text(label) })
                     }
                 }
-                Text(
-                    if (ratio >= 1) "Stretched by %.4fx (every 1s → %.3fs)".format(ratio, ratio)
-                    else "Compressed by %.4fx (every 1s → %.3fs)".format(ratio, ratio),
-                    style = MaterialTheme.typography.bodySmall,
-                )
             }
         },
         confirmButton = {
@@ -921,18 +928,18 @@ private fun PropertiesSheet(
     var collisions by remember { mutableStateOf(ScriptInfoOps.get(info, "Collisions") ?: "Normal") }
     var timer by remember { mutableStateOf(ScriptInfoOps.get(info, "Timer") ?: "100") }
     val wrapOptions = listOf(
-        "0" to "Smart wrap (top)",
-        "1" to "End-of-line wrap",
-        "2" to "No wrap",
-        "3" to "Smart wrap (bottom)",
+        "0" to tr("Smart wrap (top)", "التفاف ذكي (أعلى)", "Akıllı kaydırma (üst)"),
+        "1" to tr("End-of-line wrap", "التفاف عند نهاية السطر", "Satır sonu kaydırma"),
+        "2" to tr("No wrap", "بدون التفاف", "Kaydırma yok"),
+        "3" to tr("Smart wrap (bottom)", "التفاف ذكي (أسفل)", "Akıllı kaydırma (alt)"),
     )
     val authorFields = listOf(
-        "Script" to "Script",
-        "Translation" to "Translation",
-        "Editing" to "Editing",
-        "Timing" to "Timing",
-        "Synch Point" to "Synch Point",
-        "Updated By" to "Updated By",
+        "Script" to tr("Original Script", "السكربت الأصلي", "Orijinal Komut Dosyası"),
+        "Translation" to tr("Translation", "الترجمة", "Çeviri"),
+        "Editing" to tr("Editing", "التدقيق والتعديل", "Düzenleme"),
+        "Timing" to tr("Timing", "التوقيت", "Zamanlama"),
+        "Synch Point" to tr("Synch Point", "نقطة التزامن", "Senkron Noktası"),
+        "Updated By" to tr("Updated By", "تم التحديث بواسطة", "Güncelleyen"),
         "YCbCr Matrix" to "YCbCr Matrix",
     )
     val authorValues = remember(info) {
@@ -949,7 +956,7 @@ private fun PropertiesSheet(
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Title") },
+                label = { Text(tr("Title", "عنوان الترجمة", "Başlık")) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -971,7 +978,7 @@ private fun PropertiesSheet(
                     modifier = Modifier.weight(1f),
                 )
             }
-            Text("WrapStyle", style = MaterialTheme.typography.labelLarge)
+            Text(tr("WrapStyle", "نمط الالتفاف (WrapStyle)", "Satır Kaydırma Stili"), style = MaterialTheme.typography.labelLarge)
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -980,26 +987,26 @@ private fun PropertiesSheet(
                     FilterChip(selected = wrap == v, onClick = { wrap = v }, label = { Text(label) })
                 }
             }
-            Text("ScaledBorderAndShadow", style = MaterialTheme.typography.labelLarge)
+            Text(tr("Scale Border & Shadow", "تحجيم الحدود والظل (ScaledBorderAndShadow)", "Kenarlık ve Gölge Ölçekle"), style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                FilterChip(selected = sbs == "yes", onClick = { sbs = "yes" }, label = { Text("Yes") })
-                FilterChip(selected = sbs == "no", onClick = { sbs = "no" }, label = { Text("No") })
+                FilterChip(selected = sbs == "yes", onClick = { sbs = "yes" }, label = { Text(tr("Yes", "نعم", "Evet")) })
+                FilterChip(selected = sbs == "no", onClick = { sbs = "no" }, label = { Text(tr("No", "لا", "Hayır")) })
             }
-            Text("Collisions", style = MaterialTheme.typography.labelLarge)
+            Text(tr("Collisions", "تصادم الأسطر (Collisions)", "Çakışmalar"), style = MaterialTheme.typography.labelLarge)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                FilterChip(selected = collisions == "Normal", onClick = { collisions = "Normal" }, label = { Text("Normal (stack up)") })
-                FilterChip(selected = collisions == "Reverse", onClick = { collisions = "Reverse" }, label = { Text("Reverse (stack down)") })
+                FilterChip(selected = collisions == "Normal", onClick = { collisions = "Normal" }, label = { Text(tr("Normal (stack up)", "عادي (تراكم لأعلى)", "Normal (yukarı yığ)")) })
+                FilterChip(selected = collisions == "Reverse", onClick = { collisions = "Reverse" }, label = { Text(tr("Reverse (stack down)", "عكسي (تراكم لأسفل)", "Ters (aşağı yığ)")) })
             }
             OutlinedTextField(
                 value = timer,
                 onValueChange = { timer = it.filter { ch -> ch.isDigit() || ch == '.' } },
-                label = { Text("Timer (100 = 1.0x)") },
+                label = { Text(tr("Timer (100 = 1.0x)", "معدل السرعة (100 = عادي)", "Zamanlayıcı (100 = normal)")) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
             )
             HorizontalDivider()
-            Text("Metadata", style = MaterialTheme.typography.labelLarge)
+            Text(tr("Metadata", "معلومات إضافية", "Meta Veriler"), style = MaterialTheme.typography.labelLarge)
             authorFields.forEachIndexed { i, (_, label) ->
                 OutlinedTextField(
                     value = authorValues[i].value,
@@ -1048,7 +1055,7 @@ private fun PasteOverDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    stringResource(R.string.paste_over_hint) + " ($targetCount lines)",
+                    stringResource(R.string.paste_over_hint) + " ($targetCount)",
                     style = MaterialTheme.typography.bodySmall,
                 )
                 OutlinedTextField(
@@ -1073,9 +1080,9 @@ private fun ExportFormatDialog(
     onPick: (SubtitleFormat) -> Unit,
 ) {
     val formats = listOf(
-        Triple(AssFormat, "ASS", "Full styling and tags, standard ASS"),
-        Triple(SrtFormat, "SRT", "Plain text subtitles, stripped tags"),
-        Triple(VttFormat, "WebVTT (VTT)", "HTML5 web video subtitles"),
+        Triple(AssFormat, "ASS", tr("Full styling and tags, standard ASS", "تنسيقات ووسوم كاملة، صيغة ASS القياسية", "Tam stil ve etiketler, standart ASS")),
+        Triple(SrtFormat, "SRT", tr("Plain text subtitles, stripped tags", "نصوص مجردة، بدون وسوم أو تنسيقات", "Düz metin altyazılar")),
+        Triple(VttFormat, "WebVTT (VTT)", tr("HTML5 web video subtitles", "ترجمة خاصة بمشغلات الويب وفيديوهات HTML5", "Web video altyazıları")),
     )
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1119,12 +1126,12 @@ private fun ResolutionResampleDialog(
         title = { Text(stringResource(R.string.dialog_resample)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Source: $fromW × $fromH", style = MaterialTheme.typography.bodySmall)
+                Text(tr("Source resolution: $fromW × $fromH", "دقة المصدر: $fromW × $fromH", "Kaynak çözünürlük: $fromW × $fromH"), style = MaterialTheme.typography.bodySmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = toW,
                         onValueChange = { toW = it.filter { ch -> ch.isDigit() } },
-                        label = { Text("Target W") },
+                        label = { Text(tr("Target W", "العرض المستهدف", "Hedef Genişlik")) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -1132,7 +1139,7 @@ private fun ResolutionResampleDialog(
                     OutlinedTextField(
                         value = toH,
                         onValueChange = { toH = it.filter { ch -> ch.isDigit() } },
-                        label = { Text("Target H") },
+                        label = { Text(tr("Target H", "الارتفاع المستهدف", "Hedef Yükseklik")) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -1152,9 +1159,9 @@ private fun ResolutionResampleDialog(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = scalePos, onCheckedChange = { scalePos = it })
-                    Text("Scale \\pos/\\move")
+                    Text(tr("Scale \\pos/\\move", "تحجيم \\pos/\\move", "\\pos/\\move ölçekle"))
                     Checkbox(checked = scaleBorders, onCheckedChange = { scaleBorders = it })
-                    Text("Scale Outline/Shadow")
+                    Text(tr("Scale Outline/Shadow", "تحجيم الحدود والظل", "Kenarlık/Gölge ölçekle"))
                 }
             }
         },
@@ -1185,7 +1192,7 @@ private fun TimingPostProcessDialog(
                 OutlinedTextField(
                     value = leadIn,
                     onValueChange = { leadIn = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Lead-in (ms)") },
+                    label = { Text(tr("Lead-in (ms)", "تقديم البداية Lead-in (ms)", "Başlangıç payı (ms)")) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -1193,7 +1200,7 @@ private fun TimingPostProcessDialog(
                 OutlinedTextField(
                     value = leadOut,
                     onValueChange = { leadOut = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Lead-out (ms)") },
+                    label = { Text(tr("Lead-out (ms)", "تمديد النهاية Lead-out (ms)", "Bitiş payı (ms)")) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -1201,7 +1208,7 @@ private fun TimingPostProcessDialog(
                 OutlinedTextField(
                     value = gap,
                     onValueChange = { gap = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Min gap (ms)") },
+                    label = { Text(tr("Min gap (ms)", "الحد الأدنى للفراغ (ms)", "Minimum boşluk (ms)")) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -1229,23 +1236,23 @@ private fun KaraokeDialog(
         title = { Text(stringResource(R.string.dialog_karaoke)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Split Mode", style = MaterialTheme.typography.labelMedium)
+                Text(tr("Split Mode", "نمط التقطيع", "Bölme Modu"), style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FilterChip(
                         selected = mode == KaraokeMode.BY_WORD,
                         onClick = { mode = KaraokeMode.BY_WORD },
-                        label = { Text("By Word") },
+                        label = { Text(tr("By Word (Space)", "بالكلمة (المسافات)", "Kelimeye Göre")) },
                     )
                     FilterChip(
                         selected = mode == KaraokeMode.BY_CHAR,
                         onClick = { mode = KaraokeMode.BY_CHAR },
-                        label = { Text("By Char") },
+                        label = { Text(tr("By Char", "بالحرف", "Harfe Göre")) },
                     )
                 }
-                Text("Fill Type", style = MaterialTheme.typography.labelMedium)
+                Text(tr("Fill Type", "نوع التعبئة", "Doldurma Türü"), style = MaterialTheme.typography.labelMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FilterChip(selected = !useKf, onClick = { useKf = false }, label = { Text("{\\k}") })
-                    FilterChip(selected = useKf, onClick = { useKf = true }, label = { Text("{\\kf}") })
+                    FilterChip(selected = !useKf, onClick = { useKf = false }, label = { Text(tr("{\\k} Step-by-step", "{\\k} خطوة بخطوة", "{\\k} Adım Adım")) })
+                    FilterChip(selected = useKf, onClick = { useKf = true }, label = { Text(tr("{\\kf} Smooth", "{\\kf} متصل ناعم", "{\\kf} Akıcı")) })
                 }
             }
         },
@@ -1274,15 +1281,15 @@ private fun HistorySheet(
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Note") },
+                    label = { Text(tr("Snapshot Note", "ملاحظة النسخة", "Anlık Görüntü Notu")) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(onClick = { onSaveSnapshot(label.ifBlank { "Snapshot" }) }) { Text("Save") }
+                TextButton(onClick = { onSaveSnapshot(label.ifBlank { "Snapshot" }) }) { Text(tr("Save", "حفظ الحالي", "Kaydet")) }
             }
             HorizontalDivider()
             if (snapshots.isEmpty()) {
-                Text("No snapshots yet.", style = MaterialTheme.typography.bodySmall)
+                Text(tr("No snapshots yet. Save current script to restore it anytime.", "لا توجد نسخ سابقة. احفظ المشروع كنسخة احتياطية للرجوع إليها في أي وقت.", "Henüz anlık görüntü yok."), style = MaterialTheme.typography.bodySmall)
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(snapshots.size) { i ->
@@ -1291,27 +1298,3 @@ private fun HistorySheet(
                             headlineContent = { Text(s.label.ifBlank { "(No note)" }) },
                             supportingContent = { Text(formatTimestamp(s.createdAt), style = MaterialTheme.typography.bodySmall) },
                             trailingContent = {
-                                Row {
-                                    TextButton(onClick = { onRestore(s.id) }) { Text("Restore") }
-                                    TextButton(onClick = { onDelete(s.id) }) { Text(stringResource(R.string.common_delete)) }
-                                }
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun formatTimestamp(ms: Long): String {
-    if (ms <= 0L) return "—"
-    val cal = java.util.Calendar.getInstance().apply { timeInMillis = ms }
-    return "%04d-%02d-%02d %02d:%02d".format(
-        cal.get(java.util.Calendar.YEAR),
-        cal.get(java.util.Calendar.MONTH) + 1,
-        cal.get(java.util.Calendar.DAY_OF_MONTH),
-        cal.get(java.util.Calendar.HOUR_OF_DAY),
-        cal.get(java.util.Calendar.MINUTE),
-    )
-}
