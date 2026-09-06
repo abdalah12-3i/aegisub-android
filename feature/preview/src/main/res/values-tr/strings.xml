@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="preview_title">Önizleme</string>
+    <string name="preview_back">Geri</string>
+    <string name="preview_change_video">Videoyu Değiştir</string>
+    <string name="preview_undo">Geri Al</string>
+    <string name="preview_redo">Yinele</string>
+    <string name="preview_load_failed">Yükleme başarısız: %1$s</string>
+    <string name="preview_no_video">Video yüklenmedi</string>
+    <string name="preview_select_video">Video Seç</string>
+
+    <string name="preview_tab_subtitles">Altyazılar</string>
+    <string name="preview_tab_audio">Ses</string>
+    <string name="preview_tab_timing">Zamanlama</string>
+    <string name="preview_tab_types">Dizgi</string>
+
+    <string name="preview_waveform">Dalga Formu</string>
+    <string name="preview_spectrogram">Spektrogram</string>
+    <string name="preview_karaoke_timing">Karaoke Zamanlaması</string>
+
+    <string name="preview_set_start">Başlangıcı Ayarla</string>
+    <string name="preview_set_end">Bitişi Ayarla</string>
+    <string name="preview_prev_line">Önceki Satır</string>
+    <string name="preview_next_line">Sonraki Satır</string>
+    <string name="timing_pick_row">Zamanlamasını ayarlamak için listeden bir altyazı satırı seçin.</string>
+
+    <string name="preview_bookmarks">Yer İmleri</string>
+    <string name="preview_add_bookmark">Yer İmi Ekle</string>
+    <string name="preview_no_bookmarks">Henüz yer imi yok</string>
+    <string name="preview_jump">Git</string>
+    <string name="preview_delete">Sil</string>
+
+    <string name="types_title">Görsel Dizgi</string>
+    <string name="types_pick_row">Görsel dizgi araçlarını kullanmak için bir altyazı satırı seçin.</string>
+    <string name="preview_vt_pos_hint">Görsel Dizgi: \\pos ayarlamak için sürükleyin</string>
+    <string name="preview_vt_move_hint">Görsel Dizgi: Başlangıç (yeşil)/bitişi (turuncu) \\move için sürükleyin</string>
+    <string name="preview_pos_mode">\\pos Konumu</string>
+    <string name="preview_move_mode">\\move Hareketi</string>
+    <string name="preview_clear_pos">\\pos Temizle</string>
+    <string name="preview_clear_move">\\move Temizle</string>
+    <string name="preview_fade_in">Kararma (ms)</string>
+    <string name="preview_fade_out">Aydınlanma (ms)</string>
+    <string name="preview_apply">Uygula</string>
+    <string name="preview_clear">Temizle</string>
+    <string name="preview_clip_in">\\clip İçi</string>
+    <string name="preview_clip_out">\\iclip Tersi</string>
+    <string name="preview_typesetting">Dizgi</string>
+    <string name="preview_exit_typesetting">Dizgiden Çık</string>
+    <string name="preview_karaoke">Karaoke</string>
+    <string name="preview_exit_karaoke">Karaoke\'den Çık</string>
+
+    <string name="preview_grid_start">Başlangıç</string>
+    <string name="preview_grid_end">Bitiş</string>
+    <string name="preview_grid_style">Stil</string>
+    <string name="preview_grid_text">Metin</string>
+    <string name="subtitle_no_text">(Metin yok)</string>
+</resources>
