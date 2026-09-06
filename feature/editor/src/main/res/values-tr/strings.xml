@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="editor_title">Düzenleyici</string>
+    <string name="subtitle_list_title">Altyazı Listesi</string>
+    <string name="edit_subtitle_title">Altyazıyı Düzenle</string>
+    <string name="line_actions_title">Satır İşlemleri</string>
+    <string name="toolbox_title">Araç Kutusu</string>
+    <string name="selected_count">%1$d satır seçildi</string>
+    <string name="common_export">Dışa Aktar</string>
+    <string name="common_preview">Önizleme</string>
+
+    <string name="tool_find_replace">Bul ve Değiştir</string>
+    <string name="tool_find_replace_desc">Düz metin veya Regex ile toplu değiştirme</string>
+    <string name="tool_shift_times">Zaman Kaydırma</string>
+    <string name="tool_shift_times_desc">Seçili veya tüm satırların zamanını ileri/geri kaydır</string>
+    <string name="tool_sort">Satırları Sırala</string>
+    <string name="tool_sort_desc">Başlangıç, bitiş, stil, metin veya katmana göre sırala</string>
+    <string name="tool_framerate">Kare Hızını Dönüştür</string>
+    <string name="tool_framerate_desc">Zamanlamayı kare oranlarına göre ölçeklendir (24, 25, 30fps)</string>
+    <string name="tool_properties">Komut Dosyası Özellikleri</string>
+    <string name="tool_properties_desc">PlayRes çözünürlüğü, satır kaydırma stili ve çakışmalar</string>
+    <string name="tool_delete_empty">Boş Satırları Sil</string>
+    <string name="tool_delete_empty_desc">Metin içermeyen veya yalnızca etiket olan satırları kaldır</string>
+    <string name="tool_style_replace">Stilleri Toplu Değiştir</string>
+    <string name="tool_style_replace_desc">Belirli bir stildeki satırları başka bir stille değiştir</string>
+    <string name="tool_style_manager">Stil Yöneticisi</string>
+    <string name="tool_style_manager_desc">Yazı tipi renklerini, boyutunu, gölgeyi ve kenar boşluklarını düzenle</string>
+    <string name="tool_styling">Stil Yardımcısı</string>
+    <string name="tool_styling_desc">Satırlara tek dokunuşla hızlıca stil ata</string>
+    <string name="tool_translation">Çeviri Yardımcısı</string>
+    <string name="tool_translation_desc">Orijinal metni görerek çeviriyi gir ve otomatik ilerle</string>
+    <string name="tool_karaoke">Karaoke Oluşturucu</string>
+    <string name="tool_karaoke_desc">Satırı k ve kf etiketleriyle hecelere böl</string>
+    <string name="tool_timing_pp">Zamanlama Son İşlemcisi</string>
+    <string name="tool_timing_pp_desc">Çakışmaları kaldır ve minimum boşluğu zorla</string>
+    <string name="tool_resample">Çözünürlüğü Yeniden Örnekle</string>
+    <string name="tool_resample_desc">PlayResX/Y değerlerini ve yazı tipi/koordinat boyutlarını ölçeklendir</string>
+    <string name="tool_paste_over">Üzerine Yapıştır</string>
+    <string name="tool_paste_over_desc">Çok satırlı metni sırayla hedef satırların üzerine yapıştır</string>
+    <string name="tool_history">Geçmiş Sürümler</string>
+    <string name="tool_history_desc">Anlık görüntü al ve önceki sürümlere geri dön</string>
+
+    <string name="dialog_find_replace">Bul ve Değiştir</string>
+    <string name="dialog_shift_times">Zaman Kaydırma</string>
+    <string name="dialog_delete_empty">Boş Satırları Sil</string>
+    <string name="dialog_delete_empty_msg">Metin içermeyen tüm satırlar silinsin mi? Bu işlem geri alınabilir.</string>
+    <string name="dialog_style_replace">Stil Değiştir</string>
+    <string name="dialog_sort">Satırları Sırala</string>
+    <string name="dialog_framerate">Kare Hızını Dönüştür (FPS)</string>
+    <string name="dialog_paste_over">Üzerine Yapıştır</string>
+    <string name="paste_over_hint">Metinleri buraya yapıştırın, her satır sırayla değiştirilecektir</string>
+    <string name="dialog_export_format">Dışa Aktarma Biçimi Seçin</string>
+    <string name="dialog_resample">Çözünürlüğü Yeniden Örnekle</string>
+    <string name="dialog_timing_pp">Zamanlama Son İşlemcisi</string>
+    <string name="dialog_karaoke">Karaoke Oluşturucu</string>
+
+    <string name="common_apply">Uygula</string>
+    <string name="common_cancel">İptal</string>
+    <string name="common_delete">Sil</string>
+
+    <string name="action_move_up">Yukarı</string>
+    <string name="action_move_down">Aşağı</string>
+    <string name="action_duplicate">Çoğalt</string>
+    <string name="action_insert_before">Önce +</string>
+    <string name="action_insert_after">Sonra +</string>
+    <string name="action_split">Böl</string>
+    <string name="action_join">Birleştir</string>
+    <string name="action_delete">Sil</string>
+
+    <string name="edit_text">Altyazı Metni</string>
+    <string name="edit_start">Başlangıç</string>
+    <string name="edit_end">Bitiş</string>
+    <string name="edit_style">Stil</string>
+    <string name="edit_layer">Katman</string>
+</resources>
