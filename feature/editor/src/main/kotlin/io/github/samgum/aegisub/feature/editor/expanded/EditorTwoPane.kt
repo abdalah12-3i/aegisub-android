@@ -20,20 +20,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import kotlinx.collections.immutable.toPersistentList
 import io.github.samgum.aegisub.domain.model.AssEvent
 import io.github.samgum.aegisub.domain.model.AssScript
 import io.github.samgum.aegisub.domain.time.SubTime
+import io.github.samgum.aegisub.feature.editor.R
 import io.github.samgum.aegisub.feature.editor.components.EditorActions
 import io.github.samgum.aegisub.feature.editor.components.EventRow
 import io.github.samgum.aegisub.feature.editor.components.LineAction
 
-/**
- * 平板/大屏双栏布局（expanded/Medium）：左列表 | 右详情常驻。
- * 与 compact 共用 EventRow / EventEditFields / EditorActions。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorTwoPane(
@@ -60,24 +56,23 @@ fun EditorTwoPane(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("编辑器") },
+                title = { Text(stringResource(R.string.editor_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_cancel))
                     }
                 },
                 actions = {
                     IconButton(onClick = onOpenPreview) {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = "预览")
+                        Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.common_preview))
                     }
-                    TextButton(onClick = onExport) { Text("导出") }
+                    TextButton(onClick = onExport) { Text(stringResource(R.string.common_export)) }
                     EditorActions(canUndo, canRedo, onUndo, onRedo)
                 },
             )
         },
     ) { padding ->
         Row(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // 左：字幕列表
             LazyColumn(modifier = Modifier.weight(0.4f)) {
                 itemsIndexed(script.events, key = { _, it -> it.id }) { index, ev ->
                     EventRow(
@@ -91,7 +86,6 @@ fun EditorTwoPane(
                     )
                 }
             }
-            // 右：选中事件详情常驻
             val selected = script.events.firstOrNull { it.id == editingId }
             if (selected != null) {
                 EventDetail(
@@ -110,7 +104,7 @@ fun EditorTwoPane(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        "选择左侧字幕行进行编辑",
+                        "Select a subtitle line on the left to edit",
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }
