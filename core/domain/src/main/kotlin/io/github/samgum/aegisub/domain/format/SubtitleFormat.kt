@@ -1,12 +1,25 @@
 package io.github.samgum.aegisub.domain.format
 
-object SubtitleImport {
+import io.github.samgum.aegisub.domain.model.AssScript
 
-    data class Resolved(val name: String, val format: String)
+/** 导出时间精度。 */
+enum class TimePrecision { TWO_MS, THREE_MS, AUTO }
 
-    fun resolve(fileName: String, content: String, fallbackName: String = "Imported Subtitle"): Resolved {
-        val format = (FormatRegistry.detect(content) ?: FormatRegistry.detectByExtension(fileName))?.name ?: "txt"
-        val base = fileName.substringBeforeLast('.', fileName).trim().ifBlank { fallbackName }
-        return Resolved(name = base, format = format)
-    }
+data class ReadOptions(val detectEncoding: Boolean = true)
+
+data class WriteOptions(
+    val timePrecision: TimePrecision = TimePrecision.AUTO,
+    val stripTags: Boolean = false,
+)
+
+/** 字幕格式编解码器接口。 */
+interface SubtitleFormat {
+    val name: String
+    val extensions: List<String>
+
+    fun canRead(content: String): Boolean
+    fun canWrite(fileName: String): Boolean = extensions.any { fileName.endsWith(it, ignoreCase = true) }
+
+    fun read(text: String, options: ReadOptions = ReadOptions()): AssScript
+    fun write(script: AssScript, options: WriteOptions = WriteOptions()): String
 }
