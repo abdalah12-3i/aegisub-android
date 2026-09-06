@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="editor_title">المحرر</string>
+    <string name="subtitle_list_title">قائمة الترجمات</string>
+    <string name="edit_subtitle_title">تعديل الترجمة</string>
+    <string name="line_actions_title">عمليات السطر</string>
+    <string name="toolbox_title">صندوق الأدوات</string>
+    <string name="selected_count">تم تحديد %1$d سطر</string>
+    <string name="common_export">تصدير</string>
+    <string name="common_preview">معاينة</string>
+
+    <string name="tool_find_replace">بحث واستبدال</string>
+    <string name="tool_find_replace_desc">استبدال بنصوص عادية أو تعبيرات نمطية (Regex)</string>
+    <string name="tool_shift_times">إزاحة التوقيت</string>
+    <string name="tool_shift_times_desc">تقديم أو تأخير التوقيت لجميع الأسطر أو المحددة</string>
+    <string name="tool_sort">ترتيب الأسطر</string>
+    <string name="tool_sort_desc">ترتيب حسب البداية، النهاية، النمط، النص، أو الطبقة</string>
+    <string name="tool_framerate">تحويل معدل الإطارات</string>
+    <string name="tool_framerate_desc">تغيير سرعة التوقيت بنسبة الفريمات (24، 25، 30fps)</string>
+    <string name="tool_properties">خصائص ملف الترجمة</string>
+    <string name="tool_properties_desc">دقة العرض PlayRes، نمط الالتفاف، وتصادم الأسطر</string>
+    <string name="tool_delete_empty">حذف الأسطر الفارغة</string>
+    <string name="tool_delete_empty_desc">إزالة الأسطر الفارغة أو التي تحوي وسوماً بلا نص</string>
+    <string name="tool_style_replace">استبدال الأنماط دفعة واحدة</string>
+    <string name="tool_style_replace_desc">تغيير نمط معين في الأسطر إلى نمط آخر</string>
+    <string name="tool_style_manager">إدارة الأنماط</string>
+    <string name="tool_style_manager_desc">تعديل ألوان الخطوط، الحجم، الظل، والهوامش</string>
+    <string name="tool_styling">مساعد الأنماط</string>
+    <string name="tool_styling_desc">تطبيق الأنماط على الأسطر سطر بسطر بسرعة</string>
+    <string name="tool_translation">مساعد الترجمة</string>
+    <string name="tool_translation_desc">عرض النص الأصلي وكتابة الترجمة مع الانتقال التلقائي</string>
+    <string name="tool_karaoke">توليد الكاريوكي</string>
+    <string name="tool_karaoke_desc">تقطيع السطر إلى مقاطع صوتية بوسوم k و kf</string>
+    <string name="tool_timing_pp">معالجة التوقيت اللاحقة</string>
+    <string name="tool_timing_pp_desc">إزالة تداخل الأسطر وضبط الفراغ الأدنى</string>
+    <string name="tool_resample">إعادة ضبط أبعاد الدقة</string>
+    <string name="tool_resample_desc">تغيير أبعاد PlayResX/Y مع تكبير الخطوط والإحداثيات</string>
+    <string name="tool_paste_over">لصق متسلسل فوق الأسطر</string>
+    <string name="tool_paste_over_desc">لصق أسطر نصوص متعددة فوق الأسطر المحددة بالترتيب</string>
+    <string name="tool_history">سجل النسخ الاحتياطية</string>
+    <string name="tool_history_desc">حفظ لقطات واستعادة النسخ السابقة من المشروع</string>
+
+    <string name="dialog_find_replace">بحث واستبدال</string>
+    <string name="dialog_shift_times">إزاحة التوقيت</string>
+    <string name="dialog_delete_empty">حذف الأسطر الفارغة</string>
+    <string name="dialog_delete_empty_msg">هل تريد حذف جميع الأسطر الفارغة من النصوص؟ يمكن التراجع عن هذا الإجراء.</string>
+    <string name="dialog_style_replace">استبدال النمط</string>
+    <string name="dialog_sort">ترتيب الأسطر</string>
+    <string name="dialog_framerate">تحويل معدل الإطارات (FPS)</string>
+    <string name="dialog_paste_over">لصق متسلسل فوق الأسطر</string>
+    <string name="paste_over_hint">الصق النصوص هنا، وسيتم استبدال نص كل سطر بترتيبه</string>
+    <string name="dialog_export_format">اختر صيغة التصدير</string>
+    <string name="dialog_resample">إعادة ضبط أبعاد الدقة</string>
+    <string name="dialog_timing_pp">معالجة التوقيت اللاحقة</string>
+    <string name="dialog_karaoke">توليد الكاريوكي</string>
+
+    <string name="common_apply">تطبيق</string>
+    <string name="common_cancel">إلغاء</string>
+    <string name="common_delete">حذف</string>
+
+    <string name="action_move_up">أعلى</string>
+    <string name="action_move_down">أسفل</string>
+    <string name="action_duplicate">تكرار</string>
+    <string name="action_insert_before">قبل +</string>
+    <string name="action_insert_after">بعد +</string>
+    <string name="action_split">تقسيم</string>
+    <string name="action_join">دمج</string>
+    <string name="action_delete">حذف</string>
+
+    <string name="edit_text">نص الترجمة</string>
+    <string name="edit_start">البداية</string>
+    <string name="edit_end">النهاية</string>
+    <string name="edit_style">النمط</string>
+    <string name="edit_layer">الطبقة</string>
+</resources>
