@@ -23,17 +23,16 @@ fun EventRow(
     onToggleSelect: () -> Unit = {},
     onLongClick: () -> Unit = {},
 ) {
+    val clickAction = if (selectionMode) onToggleSelect else onClick
+    val longClickAction = if (selectionMode) onToggleSelect else onLongClick
+
     ListItem(
         headlineContent = {
             Text(
                 text = event.strippedText.ifBlank { "(No text)" },
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = if (event.comment) {
-                    MaterialTheme.colorScheme.outline
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
+                color = if (event.comment) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
             )
         },
         supportingContent = {
@@ -56,4 +55,11 @@ fun EventRow(
             }
         },
         colors = ListItemDefaults.colors(
-            containerColor = if (isSelected) MaterialTheme
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        ),
+        modifier = Modifier.combinedClickable(
+            onClick = clickAction,
+            onLongClick = longClickAction,
+        ),
+    )
+}
