@@ -21,22 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/** 微调目标端。 */
 enum class NudgeTarget { START, END }
 
-/**
- * 选中行的时间编辑面板：起/止滑块（拖动实时 seek，松手提交）+ 微调按钮组。
- *
- * @param durationMs 视频时长；<=0 时滑块值域按 1 处理（仅微调可用）。
- * @param nudgeTarget 当前微调作用端，拖动滑块会自动切换。
- * @param onNudgeTargetChange 切换微调端。
- * @param onSeek 拖动滑块时实时 seek（看画面，不提交）。
- * @param onCommitStart 松手时把起始提交到该毫秒。
- * @param onCommitEnd 松手时把结束提交到该毫秒。
- * @param onNudge 微调按钮：对当前 nudgeTarget 加减 deltaMs。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TimingEditPanel(
@@ -59,18 +45,18 @@ fun TimingEditPanel(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            TargetChip("起", selected = nudgeTarget == NudgeTarget.START, onClick = { onNudgeTargetChange(NudgeTarget.START) })
-            TargetChip("止", selected = nudgeTarget == NudgeTarget.END, onClick = { onNudgeTargetChange(NudgeTarget.END) })
+            TargetChip("Start", selected = nudgeTarget == NudgeTarget.START, onClick = { onNudgeTargetChange(NudgeTarget.START) })
+            TargetChip("End", selected = nudgeTarget == NudgeTarget.END, onClick = { onNudgeTargetChange(NudgeTarget.END) })
         }
 
         FlowRow(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            NudgeButton("−1帧") { onNudge(-FRAME_MS) }
-            NudgeButton("−0.1s") { onNudge(-100) }
-            NudgeButton("−1s") { onNudge(-1_000) }
-            NudgeButton("+1帧") { onNudge(FRAME_MS) }
+            NudgeButton("-1f") { onNudge(-FRAME_MS) }
+            NudgeButton("-0.1s") { onNudge(-100) }
+            NudgeButton("-1s") { onNudge(-1_000) }
+            NudgeButton("+1f") { onNudge(FRAME_MS) }
             NudgeButton("+0.1s") { onNudge(100) }
             NudgeButton("+1s") { onNudge(1_000) }
         }
@@ -87,7 +73,7 @@ private fun StartSlider(
 ) {
     var dragging by remember(valueMs) { mutableStateOf(valueMs.toFloat()) }
     Column {
-        Text("起 ${formatMs(valueMs)}", style = MaterialTheme.typography.labelSmall)
+        Text("Start ${formatMs(valueMs)}", style = MaterialTheme.typography.labelSmall)
         val max = durationMs.coerceAtLeast(1)
         Slider(
             value = dragging.coerceIn(0f, max.toFloat()),
@@ -112,7 +98,7 @@ private fun EndSlider(
 ) {
     var dragging by remember(valueMs) { mutableStateOf(valueMs.toFloat()) }
     Column {
-        Text("止 ${formatMs(valueMs)}", style = MaterialTheme.typography.labelSmall)
+        Text("End ${formatMs(valueMs)}", style = MaterialTheme.typography.labelSmall)
         val max = durationMs.coerceAtLeast(1)
         Slider(
             value = dragging.coerceIn(0f, max.toFloat()),
@@ -153,5 +139,4 @@ private fun formatMs(ms: Long): String {
     return "%d:%02d.%03d".format(m, s, mm)
 }
 
-/** 23.976fps 一帧 ≈ 42ms。 */
 private const val FRAME_MS: Long = 42L
