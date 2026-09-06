@@ -1,86 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 编辑器主标题与动作 -->
-    <string name="editor_list_title">字幕列表</string>
-    <string name="editor_list_empty">该工程暂无字幕行\n点右下角 + 新建，或顶栏导入</string>
-    <string name="editor_preview">预览</string>
-    <string name="editor_export">导出</string>
-    <string name="editor_undo">撤销</string>
-    <string name="editor_redo">重做</string>
-    <string name="editor_back">返回</string>
-    <string name="editor_toolbox">批量工具</string>
+    <string name="editor_title">Editor</string>
+    <string name="subtitle_list_title">Subtitles</string>
+    <string name="edit_subtitle_title">Edit Subtitle</string>
+    <string name="line_actions_title">Line Actions</string>
+    <string name="toolbox_title">Batch Tools</string>
+    <string name="selected_count">%1$d lines selected</string>
+    <string name="common_export">Export</string>
+    <string name="common_preview">Preview</string>
 
-    <!-- 编辑底栏 -->
-    <string name="edit_subtitle">编辑字幕</string>
-    <string name="edit_detail">详情</string>
-    <string name="edit_text">文本</string>
-    <string name="edit_start">开始</string>
-    <string name="edit_end">结束</string>
-    <string name="edit_style">样式</string>
-    <string name="edit_layer">层</string>
-    <string name="edit_line_actions">行操作</string>
+    <string name="tool_find_replace">Find and Replace</string>
+    <string name="tool_find_replace_desc">Plain text or Regex batch replace</string>
+    <string name="tool_shift_times">Shift Times</string>
+    <string name="tool_shift_times_desc">Forward/backward shift selected or all lines</string>
+    <string name="tool_sort">Sort Lines</string>
+    <string name="tool_sort_desc">Sort by start, end, style, text, or layer</string>
+    <string name="tool_framerate">Change Framerate</string>
+    <string name="tool_framerate_desc">Rescale timing by framerate ratio (24, 25, 30fps)</string>
+    <string name="tool_properties">Script Properties</string>
+    <string name="tool_properties_desc">PlayRes resolution, wrap style, and collisions</string>
+    <string name="tool_delete_empty">Delete Empty Lines</string>
+    <string name="tool_delete_empty_desc">Remove lines with empty content or tags only</string>
+    <string name="tool_style_replace">Batch Style Replace</string>
+    <string name="tool_style_replace_desc">Change matching style lines to another style</string>
+    <string name="tool_style_manager">Style Manager</string>
+    <string name="tool_style_manager_desc">Manage font colors, sizes, borders, and margins</string>
+    <string name="tool_styling">Styling Assistant</string>
+    <string name="tool_styling_desc">Assign styles line by line with auto-advance</string>
+    <string name="tool_translation">Translation Assistant</string>
+    <string name="tool_translation_desc">View original text and enter translation</string>
+    <string name="tool_karaoke">Karaoke Generator</string>
+    <string name="tool_karaoke_desc">Split line into syllables with k/kf tags</string>
+    <string name="tool_timing_pp">Timing Post-Processor</string>
+    <string name="tool_timing_pp_desc">Remove line overlaps and enforce minimum gaps</string>
+    <string name="tool_resample">Resolution Resampler</string>
+    <string name="tool_resample_desc">Rescale PlayResX/Y and scale fonts/positions</string>
+    <string name="tool_paste_over">Paste Over</string>
+    <string name="tool_paste_over_desc">Paste multi-line text onto target lines sequentially</string>
+    <string name="tool_history">Snapshots History</string>
+    <string name="tool_history_desc">Take snapshots and restore previous versions</string>
 
-    <!-- 行操作 -->
-    <string name="action_move_up">上移</string>
-    <string name="action_move_down">下移</string>
-    <string name="action_duplicate">复制</string>
-    <string name="action_insert_before">前插</string>
-    <string name="action_insert_after">后插</string>
-    <string name="action_split">分割</string>
-    <string name="action_join">合并</string>
-    <string name="action_delete">删除</string>
+    <string name="dialog_find_replace">Find and Replace</string>
+    <string name="dialog_shift_times">Shift Times</string>
+    <string name="dialog_delete_empty">Delete Empty Lines</string>
+    <string name="dialog_delete_empty_msg">Remove all lines with empty effective content? This operation can be undone.</string>
+    <string name="dialog_style_replace">Replace Style</string>
+    <string name="dialog_sort">Sort Lines</string>
+    <string name="dialog_framerate">Change Framerate (FPS)</string>
+    <string name="dialog_paste_over">Paste Over</string>
+    <string name="paste_over_hint">Paste text here, each line will replace matching lines in order</string>
+    <string name="dialog_export_format">Choose Export Format</string>
+    <string name="dialog_resample">Resolution Resampler</string>
+    <string name="dialog_timing_pp">Timing Post-Processor</string>
+    <string name="dialog_karaoke">Karaoke Generator</string>
 
-    <!-- 工具箱入口 -->
-    <string name="tool_find_replace">查找替换</string>
-    <string name="tool_find_replace_desc">正则 / 忽略大小写，全部替换（一次撤销）</string>
-    <string name="tool_shift_times">时间偏移</string>
-    <string name="tool_shift_times_desc">整体前移/后移，可仅作用于选中行之后</string>
-    <string name="tool_sort">排序</string>
-    <string name="tool_sort_desc">按起始/结束/样式/演员/效果/文本/层，升降序</string>
-    <string name="tool_framerate">帧率转换</string>
-    <string name="tool_framerate_desc">按 to/from 帧率等比缩放全部时间（24↔25↔30 等）</string>
-    <string name="tool_properties">脚本属性</string>
-    <string name="tool_properties_desc">编辑分辨率 / 换行样式 / 碰撞 / 缩放描边 / 计时速度</string>
-    <string name="tool_styling">样式助手</string>
-    <string name="tool_styling_desc">逐行浏览字幕，点选样式快速分配并自动前进</string>
-    <string name="tool_translation">翻译助手</string>
-    <string name="tool_translation_desc">逐行原文→译文：原文存 Name，译文存 Text，自动前进</string>
-    <string name="tool_karaoke">卡拉OK生成</string>
-    <string name="tool_karaoke_desc">把选中行切成音节并均匀分配时长，生成 {\\k}/{\\kf} 标签</string>
-    <string name="tool_timing_pp">时间后处理</string>
-    <string name="tool_timing_pp_desc">lead-in/out 提前起始延后结束 + 去重叠强制最小间隙</string>
-    <string name="tool_resample">分辨率重采样</string>
-    <string name="tool_resample_desc">改 PlayRes 并按比例缩放 \\pos/字号/边距（如 384×288→1920×1080）</string>
-    <string name="tool_paste_over">粘贴覆盖</string>
-    <string name="tool_paste_over_desc">多行文本按顺序覆盖选中行（无选中则全部行）的文本，保留时间/样式</string>
-    <string name="dialog_paste_over">粘贴覆盖</string>
-    <string name="paste_over_hint">每行一条文本，按字幕顺序覆盖（选中行优先，否则全部行）：</string>
-    <string name="tool_delete_empty">删除空行</string>
-    <string name="tool_delete_empty_desc">移除纯空 / 仅标签的行，保留绘图行</string>
-    <string name="tool_style_replace">样式批量替换</string>
-    <string name="tool_style_replace_desc">把指定样式名的事件改为另一样式</string>
-    <string name="tool_style_manager">样式管理器</string>
-    <string name="tool_style_manager_desc">编辑颜色 / 字体 / 描边 / 对齐 / 边距 / 编码</string>
-    <string name="tool_history">历史版本</string>
-    <string name="tool_history_desc">保存当前为快照 / 恢复到过往版本（可撤销）</string>
+    <string name="common_apply">Apply</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_delete">Delete</string>
 
-    <!-- 通用按钮 -->
-    <string name="common_apply">应用</string>
-    <string name="common_cancel">取消</string>
-    <string name="common_ok">确定</string>
-    <string name="common_delete">删除</string>
-    <string name="common_replace_all">全部替换</string>
+    <string name="action_move_up">Up</string>
+    <string name="action_move_down">Down</string>
+    <string name="action_duplicate">Duplicate</string>
+    <string name="action_insert_before">Before +</string>
+    <string name="action_insert_after">After +</string>
+    <string name="action_split">Split</string>
+    <string name="action_join">Join</string>
+    <string name="action_delete">Delete</string>
 
-    <!-- 对话框标题 -->
-    <string name="dialog_find_replace">查找替换</string>
-    <string name="dialog_shift_times">时间偏移</string>
-    <string name="dialog_sort">排序</string>
-    <string name="dialog_framerate">帧率转换</string>
-    <string name="dialog_karaoke">卡拉OK生成</string>
-    <string name="dialog_timing_pp">时间后处理</string>
-    <string name="dialog_resample">分辨率重采样</string>
-    <string name="dialog_style_replace">样式批量替换</string>
-    <string name="dialog_export_format">导出格式</string>
-    <string name="dialog_delete_empty">删除空行</string>
-    <string name="dialog_delete_empty_msg">删除所有「有效内容为空」的行（纯空、仅空白、仅覆盖标签）。绘图行保留。此操作可撤销。</string>
-    <string name="dialog_history_title">历史版本</string>
+    <string name="edit_text">Subtitle Text</string>
+    <string name="edit_start">Start Time</string>
+    <string name="edit_end">End Time</string>
+    <string name="edit_style">Style</string>
+    <string name="edit_layer">Layer</string>
 </resources>
