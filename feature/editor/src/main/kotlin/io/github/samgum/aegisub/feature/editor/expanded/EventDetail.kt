@@ -11,19 +11,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import io.github.samgum.aegisub.domain.model.AssEvent
 import io.github.samgum.aegisub.domain.time.SubTime
+import io.github.samgum.aegisub.feature.editor.R
 import io.github.samgum.aegisub.feature.editor.components.EventEditFields
 import io.github.samgum.aegisub.feature.editor.components.LineAction
 import io.github.samgum.aegisub.feature.editor.components.LineActions
 
-/**
- * 双栏右栏常驻详情面板（expanded）：包装 [EventEditFields]，无 Sheet 容器，附行操作工具条。
- *
- * @author 伤感咩吖
- */
 @Composable
 fun EventDetail(
     event: AssEvent,
@@ -42,7 +39,7 @@ fun EventDetail(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("详情", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.edit_subtitle_title), style = MaterialTheme.typography.titleLarge)
         EventEditFields(
             event = event,
             styles = styles,
@@ -52,7 +49,7 @@ fun EventDetail(
             onLayerChanged = onLayerChanged,
         )
         HorizontalDivider()
-        Text("行操作", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.line_actions_title), style = MaterialTheme.typography.labelLarge)
         LineActions(onAction = onLineAction)
     }
 }
