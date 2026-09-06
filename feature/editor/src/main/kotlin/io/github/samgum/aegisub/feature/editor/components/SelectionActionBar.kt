@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
@@ -18,14 +17,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.samgum.aegisub.feature.editor.R
 
-/**
- * 多选批量操作栏（选择模式激活时置于屏底）：
- * 上移 / 下移（连续块）/ 复制 / 删除 / 全不选 + 已选计数。
- *
- * @author 伤感咩吖
- */
 @Composable
 fun SelectionActionBar(
     count: Int,
@@ -52,22 +47,22 @@ fun SelectionActionBar(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             IconButton(onClick = onCancel) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "退出选择")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_cancel))
             }
             Text(
-                "已选 $count",
+                stringResource(R.string.selected_count, count),
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(end = 4.dp),
             )
             IconButton(onClick = onMoveUp) {
-                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "块上移")
+                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = stringResource(R.string.action_move_up))
             }
             IconButton(onClick = onMoveDown) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "块下移")
+                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(R.string.action_move_down))
             }
-            TextButton(onClick = onDuplicate) { Text("复制") }
-            TextButton(onClick = onDelete) { Text("删除") }
-            TextButton(onClick = onSelectAll, enabled = count < total) { Text("全选") }
+            TextButton(onClick = onDuplicate) { Text(stringResource(R.string.action_duplicate)) }
+            TextButton(onClick = onDelete) { Text(stringResource(R.string.action_delete)) }
+            TextButton(onClick = onSelectAll, enabled = count < total) { Text("Select All") }
         }
     }
 }
