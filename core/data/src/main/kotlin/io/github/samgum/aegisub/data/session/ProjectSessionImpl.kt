@@ -24,13 +24,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 /**
- * [ProjectSession] 默认实现：复刻自原 EditorViewModel 的编辑/撤销/防抖回写语义。
- *
- * - [start] 异步从 repo 读 content → 解析 → 分配稳定 event.id → 挂 SnapshotUndoStack
- * - [editEvent]/[undo]/[redo] 操作 stack 并推 [script]，触发防抖回写
- * - 防抖 [AUTOSAVE_DEBOUNCE_MS] 回写 Room，跳过加载首版本
- *
- * @author 伤感咩吖
+ * Default implementation of [ProjectSession]: replicates edit, undo, and debounced autosave semantics.
  */
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 internal class ProjectSessionImpl(
@@ -38,13 +32,6 @@ internal class ProjectSessionImpl(
     private val repo: ProjectRepository,
 ) : ProjectSession {
 
-    /**
-     * 独立 scope（Main.immediate）：防抖收集长期运行，不挂调用方的 runTest scope，
-     * 避免测试结束时「collect 永久挂起」被判为未完成协程（原 EditorViewModel 的 wireAutoSave
-     * 跑在独立 viewModelScope 上同理）。测试通过 Dispatchers.setMain 注入 TestDispatcher 推进虚拟时间。
-     *
-     * @author 伤感咩吖
-     */
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private var stack: SnapshotUndoStack<AssScript>? = null
@@ -61,7 +48,7 @@ internal class ProjectSessionImpl(
     override val canRedo: StateFlow<Boolean> = _canRedo.asStateFlow()
 
     init {
-        // 防抖回写：script 变化后（跳过加载首版本）回写 Room
+        // Debounced autosave: write changes back to Room after debounce
         scope.launch {
             _script
                 .filterNotNull()
@@ -74,7 +61,7 @@ internal class ProjectSessionImpl(
         }
     }
 
-    /** 触发异步加载。由 [ProjectSessionManager.open] 调用；幂等（重复调用仅加载一次）。 */
+    /** Triggers asynchronous loading. */
     fun start() {
         if (stack != null || _errorMessage.value != null) return
         scope.launch {
@@ -85,7 +72,7 @@ internal class ProjectSessionImpl(
                 stack = SnapshotUndoStack(script)
                 _script.value = script
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "加载失败"
+                _errorMessage.value = e.message ?: "Failed to load"
             }
         }
     }
@@ -134,12 +121,11 @@ internal class ProjectSessionImpl(
         try {
             val parsed = FormatRegistry.detect(content)?.read(content) ?: AssScript.default()
             val withIds = parsed.withEvents(parsed.events.mapIndexed { i, e -> e.copy(id = i.toLong()) })
-            // 作为新撤销点提交（复用 commit 路径，触发防抖回写）
             s.commit(withIds, "restore")
             _script.value = s.current
             syncFlags()
         } catch (e: Exception) {
-            // 解析失败：忽略，保持当前脚本不变
+            // Ignore parse errors, keep current script intact
         }
     }
 
