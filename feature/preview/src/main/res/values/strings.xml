@@ -1,37 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 预览分段 -->
-    <string name="preview_tab_subtitles">字幕</string>
-    <string name="preview_tab_audio">音频</string>
-    <string name="preview_tab_timing">时间</string>
-    <string name="preview_tab_types">打字</string>
+    <!-- Main Tabs & Titles -->
+    <string name="preview_title">Preview</string>
+    <string name="preview_back">Back</string>
+    <string name="preview_change_video">Change Video</string>
+    <string name="preview_undo">Undo</string>
+    <string name="preview_redo">Redo</string>
+    <string name="preview_load_failed">Loading failed: %1$s</string>
+    <string name="preview_no_video">No video loaded</string>
+    <string name="preview_select_video">Select Video</string>
 
-    <!-- 播放 -->
-    <string name="preview_play_pause">播放/暂停</string>
-    <string name="preview_frame_back">后退一帧</string>
-    <string name="preview_frame_forward">前进一帧</string>
-    <string name="preview_no_media">未挂载视频</string>
-    <string name="preview_pick_video">选择视频</string>
-    <string name="preview_waveform">波形</string>
-    <string name="preview_spectrogram">频谱</string>
+    <string name="preview_tab_subtitles">Subtitles</string>
+    <string name="preview_tab_audio">Audio</string>
+    <string name="preview_tab_timing">Timing</string>
+    <string name="preview_tab_types">Typesetting</string>
 
-    <!-- 时间面板 -->
-    <string name="timing_pick_row">选择左侧字幕行进行打轴</string>
-    <string name="timing_set_start">设起始</string>
-    <string name="timing_set_end">设结束</string>
-    <string name="timing_prev_row">上一行</string>
-    <string name="timing_next_row">下一行</string>
+    <string name="preview_waveform">Waveform</string>
+    <string name="preview_spectrogram">Spectrogram</string>
+    <string name="preview_karaoke_timing">Karaoke Timing</string>
 
-    <!-- 打字面板 -->
-    <string name="types_title">可视化打字</string>
-    <string name="types_pick_row">选择字幕行并挂载视频后使用可视化打字。</string>
-    <string name="types_pos_mode">\\pos 定位</string>
-    <string name="types_move_mode">\\move 移动</string>
-    <string name="types_clear_pos">清 \\pos</string>
-    <string name="types_clear_move">清 \\move</string>
-    <string name="types_karaoke">Karaoke 计时</string>
-    <string name="types_apply">应用</string>
-    <string name="types_clear">清除</string>
+    <string name="preview_set_start">Set Start</string>
+    <string name="preview_set_end">Set End</string>
+    <string name="preview_prev_line">Prev Line</string>
+    <string name="preview_next_line">Next Line</string>
+    <string name="timing_pick_row">Select a subtitle line from the list to adjust its timing.</string>
 
-    <!-- 字幕列表 -->
-    <string name="subtitle_no_text">（无文本）</string>
-</resources>
+    <!-- Bookmarks -->
+    <string name="preview_bookmarks">Bookmarks</string>
+    <string name="preview_add_bookmark">Add Bookmark</string>
+    <string name="preview_no_bookmarks">No bookmarks yet</string>
+    <string name="preview_jump">Jump</string>
+    <string name="preview_delete">Delete</string>
+
+    <!-- Visual Typesetting -->
+    <string name="types_title">Visual Typesetting</string>
+    <string name="type
