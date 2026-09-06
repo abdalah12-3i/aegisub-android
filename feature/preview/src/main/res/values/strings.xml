@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Main Tabs & Titles -->
     <string name="preview_title">Preview</string>
     <string name="preview_back">Back</string>
     <string name="preview_change_video">Change Video</string>
@@ -25,13 +24,34 @@
     <string name="preview_next_line">Next Line</string>
     <string name="timing_pick_row">Select a subtitle line from the list to adjust its timing.</string>
 
-    <!-- Bookmarks -->
     <string name="preview_bookmarks">Bookmarks</string>
     <string name="preview_add_bookmark">Add Bookmark</string>
     <string name="preview_no_bookmarks">No bookmarks yet</string>
     <string name="preview_jump">Jump</string>
     <string name="preview_delete">Delete</string>
 
-    <!-- Visual Typesetting -->
     <string name="types_title">Visual Typesetting</string>
-    <string name="type
+    <string name="types_pick_row">Select a subtitle line to use visual typesetting tools.</string>
+    <string name="preview_vt_pos_hint">Visual Typesetting: drag to set \\pos</string>
+    <string name="preview_vt_move_hint">Visual Typesetting: drag start (green)/end (orange) to set \\move</string>
+    <string name="preview_pos_mode">\\pos Position</string>
+    <string name="preview_move_mode">\\move Motion</string>
+    <string name="preview_clear_pos">Clear \\pos</string>
+    <string name="preview_clear_move">Clear \\move</string>
+    <string name="preview_fade_in">Fade In (ms)</string>
+    <string name="preview_fade_out">Fade Out (ms)</string>
+    <string name="preview_apply">Apply</string>
+    <string name="preview_clear">Clear</string>
+    <string name="preview_clip_in">\\clip Inside</string>
+    <string name="preview_clip_out">\\iclip Inverse</string>
+    <string name="preview_typesetting">Typesetting</string>
+    <string name="preview_exit_typesetting">Exit Typesetting</string>
+    <string name="preview_karaoke">Karaoke</string>
+    <string name="preview_exit_karaoke">Exit Karaoke</string>
+
+    <string name="preview_grid_start">Start</string>
+    <string name="preview_grid_end">End</string>
+    <string name="preview_grid_style">Style</string>
+    <string name="preview_grid_text">Text</string>
+    <string name="subtitle_no_text">(No text)</string>
+</resources>
