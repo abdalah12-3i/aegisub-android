@@ -13,19 +13,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import io.github.samgum.aegisub.domain.model.AssEvent
 import io.github.samgum.aegisub.domain.time.SubTime
+import io.github.samgum.aegisub.feature.editor.R
 import io.github.samgum.aegisub.feature.editor.components.EventEditFields
 import io.github.samgum.aegisub.feature.editor.components.LineAction
 import io.github.samgum.aegisub.feature.editor.components.LineActions
 
-/**
- * 事件编辑底栏（compact）：ModalBottomSheet 包装 [EventEditFields]，并附行操作工具条。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventEditSheet(
@@ -46,7 +43,7 @@ fun EventEditSheet(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("编辑字幕", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.edit_subtitle_title), style = MaterialTheme.typography.titleLarge)
             EventEditFields(
                 event = event,
                 styles = styles,
@@ -56,7 +53,7 @@ fun EventEditSheet(
                 onLayerChanged = onLayerChanged,
             )
             HorizontalDivider()
-            Text("行操作", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.line_actions_title), style = MaterialTheme.typography.labelLarge)
             LineActions(onAction = onLineAction)
         }
     }
