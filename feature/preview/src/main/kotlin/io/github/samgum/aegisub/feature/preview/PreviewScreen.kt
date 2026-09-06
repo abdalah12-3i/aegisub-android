@@ -95,13 +95,6 @@ import io.github.samgum.aegisub.feature.preview.components.TimingEditPanel
 import io.github.samgum.aegisub.feature.preview.components.VisualToolMode
 import io.github.samgum.aegisub.feature.preview.components.VisualTypesettingOverlay
 
-/**
- * 预览屏入口：加载→分发（Loading/Error/Loaded）→ compact/expanded。
- * SAF 选片在本屏发起，结果回写 ViewModel.attachMedia。
- * 顶栏撤销、选中行展开时间编辑面板、视频下只读时间轴条。
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreviewScreen(
@@ -130,21 +123,21 @@ fun PreviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("预览") },
+                title = { Text(stringResource(R.string.preview_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.preview_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { pickVideo.launch(arrayOf("video/*")) }) {
-                        Icon(Icons.Filled.Movie, contentDescription = "更换视频")
+                        Icon(Icons.Filled.Movie, contentDescription = stringResource(R.string.preview_change_video))
                     }
                     IconButton(onClick = viewModel::undo, enabled = canUndo) {
-                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "撤销")
+                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = stringResource(R.string.preview_undo))
                     }
                     IconButton(onClick = viewModel::redo, enabled = canRedo) {
-                        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "重做")
+                        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = stringResource(R.string.preview_redo))
                     }
                 },
             )
@@ -186,7 +179,7 @@ fun PreviewScreen(
 
                 is PreviewUiState.Error ->
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("加载失败：${s.message}")
+                        Text(stringResource(R.string.preview_load_failed, s.message))
                     }
 
                 is PreviewUiState.Loaded -> {
@@ -210,15 +203,8 @@ fun PreviewScreen(
     }
 }
 
-/** 预览下半区分段：字幕列表 / 音频波形 / 时间打轴 / 可视化打字。 */
 enum class PreviewPanel { SUBTITLES, AUDIO, TIMING, TYPES }
 
-/**
- * 精简视频块：仅视频画面（+字幕叠加 + 可视化打字拖拽层）+ 播放控制。
- * 波形/时间面板/打字控件移入分段面板，避免在竖屏挤占字幕列表空间。
- *
- * @author 伤感咩吖
- */
 @Composable
 private fun VideoBlock(
     state: PreviewUiState.Loaded,
@@ -234,7 +220,6 @@ private fun VideoBlock(
     val playResX = state.script.getScriptInfo("PlayResX")?.toIntOrNull() ?: 384
     val playResY = state.script.getScriptInfo("PlayResY")?.toIntOrNull() ?: 288
     Column(modifier) {
-        // 视频区固定高度（不再 aspectRatio+heightIn，避免在 weight 配额里溢出重叠到下方网格）
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -244,7 +229,6 @@ private fun VideoBlock(
         ) {
             PlayerSurface(player = viewModel.videoPlayer, modifier = Modifier.fillMaxSize())
             ActiveSubtitleLayer(viewModel = viewModel)
-            // 可视化打字：选中行 + 挂载视频时，在画面上拖拽设 {\pos}/{\move}
             if (vtActive && state.hasMedia && selectedEvent != null) {
                 VisualTypesettingOverlay(
                     playResX = playResX,
@@ -260,14 +244,14 @@ private fun VideoBlock(
             }
             if (!state.hasMedia) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("未挂载视频", color = Color.White)
-                    Button(onClick = onPickVideo) { Text("选择视频") }
+                    Text(stringResource(R.string.preview_no_video), color = Color.White)
+                    Button(onClick = onPickVideo) { Text(stringResource(R.string.preview_select_video)) }
                 }
             }
             if (vtActive) {
                 Text(
-                    if (vtToolMode == VisualToolMode.POSITION) "可视化打字：拖拽设 \\pos"
-                    else "可视化打字：拖拽起点(绿)/终点(橙)设 \\move",
+                    if (vtToolMode == VisualToolMode.POSITION) stringResource(R.string.preview_vt_pos_hint)
+                    else stringResource(R.string.preview_vt_move_hint),
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.align(Alignment.TopStart).padding(4.dp),
@@ -285,9 +269,6 @@ private fun VideoBlock(
     }
 }
 
-/**
- * 下半区分段条（字幕 / 音频 / 时间 / 打字）。
- */
 @Composable
 private fun PreviewTabs(
     panel: PreviewPanel,
@@ -310,9 +291,6 @@ private fun PreviewTabs(
     }
 }
 
-/**
- * 下半区内容：按分段渲染，占满剩余空间（字幕列表因此总是可达且宽敞）。
- */
 @Composable
 private fun PreviewPanelContent(
     panel: PreviewPanel,
@@ -342,8 +320,8 @@ private fun PreviewPanelContent(
                 Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = { onShowSpectrogramChange(false) }) { Text("波形") }
-                TextButton(onClick = { onShowSpectrogramChange(true) }) { Text("频谱") }
+                TextButton(onClick = { onShowSpectrogramChange(false) }) { Text(stringResource(R.string.preview_waveform)) }
+                TextButton(onClick = { onShowSpectrogramChange(true) }) { Text(stringResource(R.string.preview_spectrogram)) }
             }
             if (showSpectrogram) {
                 SpectrogramView(
@@ -373,29 +351,28 @@ private fun PreviewPanelContent(
             } else {
                 Text(stringResource(R.string.timing_pick_row), modifier = Modifier.padding(16.dp))
             }
-            // 书签：在当前位加书签 + 列表跳转/删除
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("书签", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                Button(onClick = { viewModel.addBookmark("") }) { Text("加书签（当前位）") }
+                Text(stringResource(R.string.preview_bookmarks), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Button(onClick = { viewModel.addBookmark("") }) { Text(stringResource(R.string.preview_add_bookmark)) }
             }
             if (bookmarks.isEmpty()) {
-                Text("暂无书签", style = MaterialTheme.typography.bodySmall,
+                Text(stringResource(R.string.preview_no_bookmarks), style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             } else {
                 bookmarks.forEach { bm ->
                     ListItem(
-                        headlineContent = { Text(bm.label.ifBlank { "书签 ${formatTime(bm.timeMs)}" }) },
+                        headlineContent = { Text(bm.label.ifBlank { "Bookmark ${formatTime(bm.timeMs)}" }) },
                         supportingContent = {
                             Text(formatTime(bm.timeMs), style = MaterialTheme.typography.bodySmall)
                         },
                         trailingContent = {
                             Row {
-                                TextButton(onClick = { viewModel.seekToBookmark(bm.timeMs) }) { Text("跳转") }
-                                TextButton(onClick = { viewModel.deleteBookmark(bm.id) }) { Text("删除") }
+                                TextButton(onClick = { viewModel.seekToBookmark(bm.timeMs) }) { Text(stringResource(R.string.preview_jump)) }
+                                TextButton(onClick = { viewModel.deleteBookmark(bm.id) }) { Text(stringResource(R.string.preview_delete)) }
                             }
                         },
                         modifier = Modifier.clickable { viewModel.seekToBookmark(bm.timeMs) },
@@ -421,7 +398,7 @@ private fun PreviewPanelContent(
                     onClearClip = { viewModel.clearEventClip(selectedEvent.id) },
                 )
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                Text("Karaoke 计时", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.preview_karaoke_timing), style = MaterialTheme.typography.titleSmall)
                 KaraokeTimeline(
                     text = selectedEvent.text,
                     onCommit = { viewModel.setEventText(selectedEvent.id, it) },
@@ -433,10 +410,6 @@ private fun PreviewPanelContent(
     }
 }
 
-
-/**
- * 可视化打字控件：模式切换（定位/移动）+ 旋转 {\fr} 滑块 + 淡入淡出 {\fad} + 清除。
- */
 @Composable
 private fun VisualTypesettingControls(
     event: AssEvent,
@@ -460,27 +433,25 @@ private fun VisualTypesettingControls(
     var cy2 by remember(event.id) { mutableStateOf((existingClip?.y2 ?: 0).toString()) }
     var clipInverse by remember(event.id) { mutableStateOf(existingClip?.inverse ?: false) }
     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-        // 模式切换
         Row(verticalAlignment = Alignment.CenterVertically) {
             FilterChip(
                 selected = toolMode == VisualToolMode.POSITION,
                 onClick = { onToolModeChange(VisualToolMode.POSITION) },
-                label = { Text("\\pos 定位") },
+                label = { Text(stringResource(R.string.preview_pos_mode)) },
             )
             Spacer(Modifier.width(6.dp))
             FilterChip(
                 selected = toolMode == VisualToolMode.MOVE,
                 onClick = { onToolModeChange(VisualToolMode.MOVE) },
-                label = { Text("\\move 移动") },
+                label = { Text(stringResource(R.string.preview_move_mode)) },
             )
             Spacer(Modifier.weight(1f))
             TextButton(
                 onClick = if (toolMode == VisualToolMode.MOVE) onClearMove else onClearPos,
             ) {
-                Text(if (toolMode == VisualToolMode.MOVE) "清 \\move" else "清 \\pos")
+                Text(if (toolMode == VisualToolMode.MOVE) stringResource(R.string.preview_clear_move) else stringResource(R.string.preview_clear_pos))
             }
         }
-        // 旋转
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\\fr", style = MaterialTheme.typography.labelMedium)
             Slider(
@@ -492,13 +463,12 @@ private fun VisualTypesettingControls(
             )
             Text("${slider.roundToInt()}°", style = MaterialTheme.typography.labelMedium)
         }
-        // 淡入淡出
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\\fad", style = MaterialTheme.typography.labelMedium)
             OutlinedTextField(
                 value = fadeIn,
                 onValueChange = { fadeIn = it.filter { ch -> ch.isDigit() } },
-                label = { Text("淡入 ms") },
+                label = { Text(stringResource(R.string.preview_fade_in)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
@@ -506,16 +476,15 @@ private fun VisualTypesettingControls(
             OutlinedTextField(
                 value = fadeOut,
                 onValueChange = { fadeOut = it.filter { ch -> ch.isDigit() } },
-                label = { Text("淡出 ms") },
+                label = { Text(stringResource(R.string.preview_fade_out)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
             )
             TextButton(onClick = {
                 onFadeChange(fadeIn.toIntOrNull() ?: 0, fadeOut.toIntOrNull() ?: 0)
-            }) { Text("应用") }
+            }) { Text(stringResource(R.string.preview_apply)) }
         }
-        // 矩形裁剪 {\clip}/{\iclip}
         HorizontalDivider(Modifier.padding(vertical = 6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\\clip", style = MaterialTheme.typography.labelMedium)
@@ -549,30 +518,26 @@ private fun VisualTypesettingControls(
             FilterChip(
                 selected = !clipInverse,
                 onClick = { clipInverse = false },
-                label = { Text("\\clip 显示区内") },
+                label = { Text(stringResource(R.string.preview_clip_in)) },
             )
             Spacer(Modifier.width(6.dp))
             FilterChip(
                 selected = clipInverse,
                 onClick = { clipInverse = true },
-                label = { Text("\\iclip 反向") },
+                label = { Text(stringResource(R.string.preview_clip_out)) },
             )
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = onClearClip) { Text("清除") }
+            TextButton(onClick = onClearClip) { Text(stringResource(R.string.preview_clear)) }
             Button(onClick = {
                 onClipChange(
                     cx1.toIntOrNull() ?: 0, cy1.toIntOrNull() ?: 0,
                     cx2.toIntOrNull() ?: 0, cy2.toIntOrNull() ?: 0, clipInverse,
                 )
-            }) { Text("应用") }
+            }) { Text(stringResource(R.string.preview_apply)) }
         }
     }
 }
 
-/**
- * 活动字幕层：独立订阅 [PreviewViewModel.activeSubtitle]（仅事件切换时变化），
- * 与 VideoBlock 的 50ms 位置 tick 重组解耦，降低低端机每帧开销。
- */
 @Composable
 private fun ActiveSubtitleLayer(viewModel: PreviewViewModel) {
     val infos by viewModel.activeSubtitles.collectAsStateWithLifecycle()
@@ -595,10 +560,9 @@ private fun PlaybackControls(
             IconButton(onClick = onPlayPause) {
                 Icon(
                     if (playback.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = "播放/暂停",
+                    contentDescription = "Play/Pause",
                 )
             }
-            // 逐帧：后退 / 前进（仅挂载视频后有意义）
             IconButton(onClick = onFrameBack, enabled = playback.isReady) {
                 Text("◀▏", style = MaterialTheme.typography.titleSmall)
             }
@@ -618,7 +582,6 @@ private fun PlaybackControls(
                 }
             }
             Text(" / ${formatTime(playback.durationMs)}", style = MaterialTheme.typography.bodySmall)
-            // 帧率显示（未知则不显示数值）
             if (playback.fps > 0f) {
                 Text(
                     "  ${"%.2f".format(playback.fps)}fps",
@@ -639,12 +602,6 @@ private fun PlaybackControls(
     }
 }
 
-/**
- * 顶部工具栏（仿桌面 Aegisub）：撤销/重做/播放/逐帧/时间/倍速/换片。
- * 横屏主导，一行常驻。
- *
- * @author 伤感咩吖
- */
 @Composable
 private fun PreviewToolbar(state: PreviewUiState.Loaded, viewModel: PreviewViewModel) {
     val canUndo by viewModel.canUndo.collectAsStateWithLifecycle()
@@ -654,15 +611,15 @@ private fun PreviewToolbar(state: PreviewUiState.Loaded, viewModel: PreviewViewM
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = viewModel::undo, enabled = canUndo) {
-            Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "撤销")
+            Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = stringResource(R.string.preview_undo))
         }
         IconButton(onClick = viewModel::redo, enabled = canRedo) {
-            Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "重做")
+            Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = stringResource(R.string.preview_redo))
         }
         IconButton(onClick = viewModel::playPause) {
             Icon(
                 if (state.playback.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                contentDescription = "播放/暂停",
+                contentDescription = "Play/Pause",
             )
         }
         IconButton(onClick = viewModel::frameStepBack, enabled = state.playback.isReady) {
@@ -687,9 +644,6 @@ private fun PreviewToolbar(state: PreviewUiState.Loaded, viewModel: PreviewViewM
     }
 }
 
-/**
- * 波形/频谱带：切换 + AudioTimeline/SpectrogramView。
- */
 @Composable
 private fun AudioBand(
     state: PreviewUiState.Loaded,
@@ -705,9 +659,9 @@ private fun AudioBand(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            FilterChip(selected = !showSpectrogram, onClick = { onShowSpectrogramChange(false) }, label = { Text("波形") })
+            FilterChip(selected = !showSpectrogram, onClick = { onShowSpectrogramChange(false) }, label = { Text(stringResource(R.string.preview_waveform)) })
             Spacer(Modifier.width(6.dp))
-            FilterChip(selected = showSpectrogram, onClick = { onShowSpectrogramChange(true) }, label = { Text("频谱") })
+            FilterChip(selected = showSpectrogram, onClick = { onShowSpectrogramChange(true) }, label = { Text(stringResource(R.string.preview_spectrogram)) })
         }
         if (showSpectrogram) {
             SpectrogramView(
@@ -731,7 +685,6 @@ private fun AudioBand(
     }
 }
 
-/** 书签区：在当前位加书签 + 列表跳转/删除。 */
 @Composable
 private fun BookmarksSection(
     state: PreviewUiState.Loaded,
@@ -745,20 +698,20 @@ private fun BookmarksSection(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("书签", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            Button(onClick = { viewModel.addBookmark("") }) { Text("加书签") }
+            Text(stringResource(R.string.preview_bookmarks), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Button(onClick = { viewModel.addBookmark("") }) { Text(stringResource(R.string.preview_add_bookmark)) }
         }
         if (bookmarks.isEmpty()) {
-            Text("暂无书签", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp))
+            Text(stringResource(R.string.preview_no_bookmarks), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp))
         } else {
             bookmarks.forEach { bm ->
                 ListItem(
-                    headlineContent = { Text(bm.label.ifBlank { "书签 ${formatTime(bm.timeMs)}" }) },
+                    headlineContent = { Text(bm.label.ifBlank { "Bookmark ${formatTime(bm.timeMs)}" }) },
                     supportingContent = { Text(formatTime(bm.timeMs), style = MaterialTheme.typography.bodySmall) },
                     trailingContent = {
                         Row {
-                            TextButton(onClick = { viewModel.seekToBookmark(bm.timeMs) }) { Text("跳转") }
-                            TextButton(onClick = { viewModel.deleteBookmark(bm.id) }) { Text("删除") }
+                            TextButton(onClick = { viewModel.seekToBookmark(bm.timeMs) }) { Text(stringResource(R.string.preview_jump)) }
+                            TextButton(onClick = { viewModel.deleteBookmark(bm.id) }) { Text(stringResource(R.string.preview_delete)) }
                         }
                     },
                     modifier = Modifier.clickable { viewModel.seekToBookmark(bm.timeMs) },
@@ -768,10 +721,6 @@ private fun BookmarksSection(
     }
 }
 
-/**
- * 竖屏预览：视频（限高）+ 打轴工具栏（上/下/设起始/设结束）+ 波形带（默认）/打字/Karao
- * + 字幕列表（占满剩余，始终可见可达）。波形与列表同屏，恢复一屏打轴工作流。
- */
 @Composable
 private fun CompactPreview(
     state: PreviewUiState.Loaded,
@@ -793,31 +742,29 @@ private fun CompactPreview(
             onVtToolModeChange = { vtToolMode = it },
             videoMaxHeight = 200.dp,
         )
-        // 打轴工具栏 + 切换
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
-                Icon(Icons.Filled.SkipPrevious, contentDescription = "上一行")
+                Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
             }
-            Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text("设起始") }
-            Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text("设结束") }
+            Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_start)) }
+            Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_end)) }
             IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
-                Icon(Icons.Filled.SkipNext, contentDescription = "下一行")
+                Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
             }
             Spacer(Modifier.weight(1f))
             TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
-                Text(if (showSpectrogram) "波形" else "频谱")
+                Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
             }
             TextButton(onClick = { vtActive = !vtActive }) {
-                Text(if (vtActive) "退出打字" else "打字")
+                Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting))
             }
             TextButton(onClick = { karaokeMode = !karaokeMode }) {
-                Text(if (karaokeMode) "退出Karao" else "Karao")
+                Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke))
             }
         }
-        // 中间区：默认波形带；打字/Karao 激活时换为对应控件（仍保留列表可见）
         if (vtActive && selected != null && state.hasMedia) {
             Column(Modifier.fillMaxWidth().heightIn(max = 170.dp).verticalScroll(rememberScrollState())) {
                 VisualTypesettingControls(
@@ -841,7 +788,6 @@ private fun CompactPreview(
         } else {
             AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.height(110.dp).fillMaxWidth())
         }
-        // 字幕列表：占满剩余，始终可见可达（打轴时点行即跳转 + 选中）
         EventListColumn(
             events = state.script.events,
             currentEventId = state.currentEventId,
@@ -852,10 +798,6 @@ private fun CompactPreview(
     }
 }
 
-/**
- * 横屏预览（主要形态）：上半「视频 | 波形/打字/Karao」+ 打轴工具栏 + 下半「宽幅字幕列表（主导）」。
- * 对齐桌面 Aegisub：列表是底部宽幅主工作区，视频与波形同屏可见，打轴工具栏一行常驻。
- */
 @Composable
 private fun ExpandedPreview(
     state: PreviewUiState.Loaded,
@@ -870,114 +812,104 @@ private fun ExpandedPreview(
     var sortOrder by remember { mutableStateOf(io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING) }
     val selected = state.script.events.firstOrNull { it.id == state.selectedEventId }
     Column(Modifier.fillMaxSize()) {
-        // 顶部工具栏（仿桌面 Aegisub）：撤销/重做/播放/换片 + seek 时间
         PreviewToolbar(state, viewModel)
         Row(Modifier.fillMaxSize().weight(1f)) {
-        // 左：视频(上, 固定高度不溢出) + 字幕网格(下，占剩余)
-        Column(Modifier.weight(0.60f)) {
-            VideoBlock(
-                state = state,
-                viewModel = viewModel,
-                onPickVideo = onPickVideo,
-                vtActive = vtActive && selected != null && state.hasMedia,
-                vtToolMode = vtToolMode,
-                onVtToolModeChange = { vtToolMode = it },
-                videoMaxHeight = 160.dp,
-            )
-            SubtitleGrid(
-                events = state.script.events,
-                currentEventId = state.currentEventId,
-                selectedEventId = state.selectedEventId,
-                onSelect = viewModel::selectEvent,
-                sortKey = sortKey,
-                sortOrder = sortOrder,
-                onSort = { key ->
-                    if (sortKey == key) {
-                        sortOrder = if (sortOrder == io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING)
-                            io.github.samgum.aegisub.domain.edit.SortOrder.DESCENDING
-                        else io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
-                    } else {
-                        sortKey = key
-                        sortOrder = io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
-                    }
-                    viewModel.sortLines(key, sortOrder)
-                },
-                modifier = Modifier.weight(1f),
-            )
-        }
-        // 右：波形/打字/Karao(上，主体) + 打轴工具栏(下)
-        Column(Modifier.weight(0.40f)) {
-            Row(
-                Modifier.fillMaxWidth().padding(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
-                    Text(if (showSpectrogram) "波形" else "频谱")
-                }
-                TextButton(onClick = { vtActive = !vtActive }) {
-                    Text(if (vtActive) "退出打字" else "打字")
-                }
-                TextButton(onClick = { karaokeMode = !karaokeMode }) {
-                    Text(if (karaokeMode) "退出Karao" else "Karao")
-                }
+            Column(Modifier.weight(0.60f)) {
+                VideoBlock(
+                    state = state,
+                    viewModel = viewModel,
+                    onPickVideo = onPickVideo,
+                    vtActive = vtActive && selected != null && state.hasMedia,
+                    vtToolMode = vtToolMode,
+                    onVtToolModeChange = { vtToolMode = it },
+                    videoMaxHeight = 160.dp,
+                )
+                SubtitleGrid(
+                    events = state.script.events,
+                    currentEventId = state.currentEventId,
+                    selectedEventId = state.selectedEventId,
+                    onSelect = viewModel::selectEvent,
+                    sortKey = sortKey,
+                    sortOrder = sortOrder,
+                    onSort = { key ->
+                        if (sortKey == key) {
+                            sortOrder = if (sortOrder == io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING)
+                                io.github.samgum.aegisub.domain.edit.SortOrder.DESCENDING
+                            else io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
+                        } else {
+                            sortKey = key
+                            sortOrder = io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
+                        }
+                        viewModel.sortLines(key, sortOrder)
+                    },
+                    modifier = Modifier.weight(1f),
+                )
             }
-            if (vtActive && selected != null && state.hasMedia) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                    VisualTypesettingControls(
-                        event = selected,
-                        toolMode = vtToolMode,
-                        onToolModeChange = { vtToolMode = it },
-                        onRotationChange = { viewModel.setEventRotation(selected.id, it) },
-                        onFadeChange = { f, fo -> viewModel.setEventFade(selected.id, f, fo) },
-                        onClearPos = { viewModel.clearEventPos(selected.id) },
-                        onClearMove = { viewModel.clearEventMove(selected.id) },
-                        onClipChange = { x1, y1, x2, y2, inv -> viewModel.setEventClip(selected.id, x1, y1, x2, y2, inv) },
-                        onClearClip = { viewModel.clearEventClip(selected.id) },
+            Column(Modifier.weight(0.40f)) {
+                Row(
+                    Modifier.fillMaxWidth().padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
+                        Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
+                    }
+                    TextButton(onClick = { vtActive = !vtActive }) {
+                        Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting))
+                    }
+                    TextButton(onClick = { karaokeMode = !karaokeMode }) {
+                        Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke))
+                    }
+                }
+                if (vtActive && selected != null && state.hasMedia) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                        VisualTypesettingControls(
+                            event = selected,
+                            toolMode = vtToolMode,
+                            onToolModeChange = { vtToolMode = it },
+                            onRotationChange = { viewModel.setEventRotation(selected.id, it) },
+                            onFadeChange = { f, fo -> viewModel.setEventFade(selected.id, f, fo) },
+                            onClearPos = { viewModel.clearEventPos(selected.id) },
+                            onClearMove = { viewModel.clearEventMove(selected.id) },
+                            onClipChange = { x1, y1, x2, y2, inv -> viewModel.setEventClip(selected.id, x1, y1, x2, y2, inv) },
+                            onClearClip = { viewModel.clearEventClip(selected.id) },
+                        )
+                    }
+                } else if (karaokeMode && selected != null) {
+                    KaraokeTimeline(
+                        text = selected.text,
+                        onCommit = { viewModel.setEventText(selected.id, it) },
+                        modifier = Modifier.padding(8.dp).weight(1f),
+                    )
+                } else {
+                    AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.weight(1f))
+                }
+                HorizontalDivider()
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
+                        Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
+                    }
+                    Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_start)) }
+                    Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_end)) }
+                    IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
+                        Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
+                    }
+                }
+                selected?.let {
+                    Text(
+                        "${it.start.toAssString(false)} → ${it.end.toAssString(false)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
-            } else if (karaokeMode && selected != null) {
-                KaraokeTimeline(
-                    text = selected.text,
-                    onCommit = { viewModel.setEventText(selected.id, it) },
-                    modifier = Modifier.padding(8.dp).weight(1f),
-                )
-            } else {
-                AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.weight(1f))
-            }
-            HorizontalDivider()
-            // 打轴工具栏（右下常驻）：上行/设起始/设结束/下行 + 选中行时间
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
-                    Icon(Icons.Filled.SkipPrevious, contentDescription = "上一行")
-                }
-                Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text("起") }
-                Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text("止") }
-                IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
-                    Icon(Icons.Filled.SkipNext, contentDescription = "下一行")
-                }
-            }
-            selected?.let {
-                Text(
-                    "${it.start.toAssString(false)} → ${it.end.toAssString(false)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                )
             }
         }
-        } // close outer Column
     }
 }
 
-/**
- * 桌面端风格字幕网格：表头 + 多列表格行（# | 开始 | 结束 | 样式 | 文本）。
- * 仿 Aegisub 桌面版字幕网格，横屏主导工作区。
- *
- * @author 伤感咩吖
- */
 @Composable
 private fun SubtitleGrid(
     events: List<AssEvent>,
@@ -990,7 +922,6 @@ private fun SubtitleGrid(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
-        // 表头（点击列头排序，仿桌面 Aegisub）
         Row(
             Modifier
                 .fillMaxWidth()
@@ -999,16 +930,16 @@ private fun SubtitleGrid(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("#", Modifier.weight(0.05f), style = MaterialTheme.typography.labelMedium)
-            SortHeader("开始", Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.START, sortOrder) {
+            SortHeader(stringResource(R.string.preview_grid_start), Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.START, sortOrder) {
                 onSort(io.github.samgum.aegisub.domain.edit.SortKey.START)
             }
-            SortHeader("结束", Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.END, sortOrder) {
+            SortHeader(stringResource(R.string.preview_grid_end), Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.END, sortOrder) {
                 onSort(io.github.samgum.aegisub.domain.edit.SortKey.END)
             }
-            SortHeader("样式", Modifier.weight(0.14f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.STYLE, sortOrder) {
+            SortHeader(stringResource(R.string.preview_grid_style), Modifier.weight(0.14f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.STYLE, sortOrder) {
                 onSort(io.github.samgum.aegisub.domain.edit.SortKey.STYLE)
             }
-            Text("文本", Modifier.weight(0.43f), style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.preview_grid_text), Modifier.weight(0.43f), style = MaterialTheme.typography.labelMedium)
         }
         HorizontalDivider()
         LazyColumn(Modifier.fillMaxSize()) {
@@ -1025,7 +956,6 @@ private fun SubtitleGrid(
     }
 }
 
-/** 可排序的表头单元格：点击切换升/降序，显示箭头指示。 */
 @Composable
 private fun SortHeader(
     label: String,
@@ -1074,7 +1004,7 @@ private fun SubtitleGridRow(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            event.strippedText.ifBlank { "（空）" },
+            event.strippedText.ifBlank { stringResource(R.string.subtitle_no_text) },
             Modifier.weight(0.43f),
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
@@ -1133,10 +1063,6 @@ private fun PreviewEventRow(event: AssEvent, isCurrent: Boolean, isSelected: Boo
     )
 }
 
-/**
- * 选中行的时间编辑承载：本地持有微调目标（起/止），把面板事件接到 ViewModel。
- * 选中行切换时重置微调目标为「起」。
- */
 @Composable
 private fun TimingEditLayer(state: PreviewUiState.Loaded, viewModel: PreviewViewModel) {
     val event = state.script.events.firstOrNull { it.id == state.selectedEventId } ?: return
@@ -1159,12 +1085,6 @@ private fun TimingEditLayer(state: PreviewUiState.Loaded, viewModel: PreviewView
     )
 }
 
-/**
- * 打轴工具栏（选中行时显示）：设起始/结束 = 当前播放位置 + 上下行导航。
- * 配合播放做踩点打轴——听到台词起止时点对应按钮。
- *
- * @author 伤感咩吖
- */
 @Composable
 private fun TimingToolbar(state: PreviewUiState.Loaded, viewModel: PreviewViewModel) {
     val id = state.selectedEventId ?: return
@@ -1173,17 +1093,16 @@ private fun TimingToolbar(state: PreviewUiState.Loaded, viewModel: PreviewViewMo
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = viewModel::selectPrevEvent) {
-            Icon(Icons.Filled.SkipPrevious, contentDescription = "上一行")
+            Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
         }
-        Button(onClick = { viewModel.setStartToPosition(id) }) { Text("设起始") }
-        Button(onClick = { viewModel.setEndToPosition(id) }) { Text("设结束") }
+        Button(onClick = { viewModel.setStartToPosition(id) }) { Text(stringResource(R.string.preview_set_start)) }
+        Button(onClick = { viewModel.setEndToPosition(id) }) { Text(stringResource(R.string.preview_set_end)) }
         IconButton(onClick = viewModel::selectNextEvent) {
-            Icon(Icons.Filled.SkipNext, contentDescription = "下一行")
+            Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
         }
     }
 }
 
-/** ms → "M:SS" 或 "H:MM:SS"。 */
 private fun formatTime(ms: Long): String {
     if (ms <= 0) return "0:00"
     val totalSec = ms / 1000
