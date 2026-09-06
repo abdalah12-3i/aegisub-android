@@ -29,25 +29,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import io.github.samgum.aegisub.domain.model.AssEvent
 import io.github.samgum.aegisub.domain.model.AssStyle
+import io.github.samgum.aegisub.feature.editor.R
 
-/**
- * 样式助手（复刻桌面 Aegisub Styling Assistant）：
- * 逐行浏览字幕，从样式列表点选一个 → 应用到当前行并自动前进到下一行。
- *
- * @param event 当前行（被分配样式的对象）
- * @param position 当前行序号（0 基，用于显示「第 N / M 行」）
- * @param total 事件总数
- * @param styles 全部样式（点击即分配）
- * @param onAssign 点选某样式：应用到当前行并前进（由调用方实现前进逻辑）
- * @param onPrev/onNext 上一行 / 下一行
- *
- * @author 伤感咩吖
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StylingAssistantSheet(
@@ -63,43 +52,41 @@ fun StylingAssistantSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
-            // 顶部：行导航 + 当前行预览
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text("样式助手", style = MaterialTheme.typography.titleLarge)
+                Text(stringResource(R.string.tool_styling), style = MaterialTheme.typography.titleLarge)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "第 ${position + 1} / $total 行",
+                        "${position + 1} / $total",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(end = 4.dp),
                     )
                     IconButton(onClick = onPrev, enabled = position > 0) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "上一行")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
                     }
                     IconButton(onClick = onNext, enabled = position < total - 1) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "下一行")
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
                     }
                 }
             }
             Text(
-                text = event.strippedText.ifBlank { "（空行）" },
+                text = event.strippedText.ifBlank { "(Empty)" },
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(vertical = 8.dp),
             )
             Text(
-                "当前样式：${event.style}",
+                "Current: ${event.style}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            Text("点选样式以应用到当前行（并自动前进）", style = MaterialTheme.typography.labelMedium)
+            Text("Tap a style to assign and auto-advance", style = MaterialTheme.typography.labelMedium)
 
-            // 样式列表
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp),
             ) {
@@ -115,7 +102,6 @@ fun StylingAssistantSheet(
     }
 }
 
-/** 单个样式选项：色块 + 名称 + 字体/字号描述，点击即分配。 */
 @Composable
 private fun StyleChoiceRow(style: AssStyle, selected: Boolean, onClick: () -> Unit) {
     Row(
@@ -146,7 +132,7 @@ private fun StyleChoiceRow(style: AssStyle, selected: Boolean, onClick: () -> Un
                 else MaterialTheme.colorScheme.onSurface,
             )
             Text(
-                "${style.font} ${style.fontSize.toInt()}px · 对齐 ${style.alignment}",
+                "${style.font} ${style.fontSize.toInt()}px · Align ${style.alignment}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
