@@ -1298,3 +1298,20 @@ private fun HistorySheet(
                             headlineContent = { Text(s.label.ifBlank { "(No note)" }) },
                             supportingContent = { Text(formatTimestamp(s.createdAt), style = MaterialTheme.typography.bodySmall) },
                             trailingContent = {
+                                        Row {
+                                            TextButton(onClick = { onRestore(s.id) }) { Text(tr("Restore", "استعادة", "Geri Yükle")) }
+                                            TextButton(onClick = { onDelete(s.id) }) { Text(stringResource(R.string.common_delete)) }
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+private fun formatTimestamp(ms: Long): String {
+    if (ms <= 0L) return "—"
+    return java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(ms))
+}
