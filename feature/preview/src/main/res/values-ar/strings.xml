@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- العناوين والتبويبات -->
+    <string name="preview_title">معاينة الفيديو</string>
+    <string name="preview_back">رجوع</string>
+    <string name="preview_change_video">تغيير الفيديو</string>
+    <string name="preview_undo">تراجع</string>
+    <string name="preview_redo">إعادة</string>
+    <string name="preview_load_failed">فشل التحميل: %1$s</string>
+    <string name="preview_no_video">لم يتم تحميل فيديو</string>
+    <string name="preview_select_video">اختيار فيديو</string>
+
+    <string name="preview_tab_subtitles">الترجمات</string>
+    <string name="preview_tab_audio">الصوت</string>
+    <string name="preview_tab_timing">التوقيت</string>
+    <string name="preview_tab_types">المحاكاة</string>
+
+    <string name="preview_waveform">الموجات</string>
+    <string name="preview_spectrogram">المخطط الطيفي</string>
+    <string name="preview_karaoke_timing">توقيت الكاريوكي</string>
+
+    <string name="preview_set_start">تعيين البداية</string>
+    <string name="preview_set_end">تعيين النهاية</string>
+    <string name="preview_prev_line">السطر السابق</string>
+    <string name="preview_next_line">السطر التالي</string>
+    <string name="timing_pick_row">حدد سطر ترجمة من القائمة لضبط توقيته.</string>
+
+    <!-- الإشارات المرجعية -->
+    <string name="preview_bookmarks">الإشارات المرجعية</string>
+    <string name="preview_add_bookmark">إضافة إشارة</string>
+    <string name="preview_no_bookmarks">لا توجد إشارات مرجعية</string>
+    <string name="preview_jump">انتقال</string>
+    <string name="preview_delete">حذف</string>
+
+    <!-- المحاكاة والتنسيق المرئي -->
+    <string name="types_title">التنسيق المرئي (المحاكاة)</string>
+    <string name="types_pick_row">حدد سطر ترجمة لاستخدام أدوات المحاكاة المرئية.</string>
+    <string name="preview_vt_pos_hint">المحاكاة المرئية: اسحب النص لتحديد الموضع \\pos</string>
+    <string name="preview_vt_move_hint">المحاكاة المرئية: اسحب البداية (خضراء) والنهاية (برتقالية) لـ \\move</string>
+    <string name="preview_pos_mode">\\pos الموضع</string>
+    <string name="preview_move_mode">\\move التحريك</string>
+    <string name="preview_clear_pos">مسح \\pos</string>
+    <string name="preview_clear_move">مسح \\move</string>
+    <string name="preview_fade_in">تلاشي للداخل (ms)</string>
+    <string name="preview_fade_out">تلاشي للخارج (ms)</string>
+    <string name="preview_apply">تطبيق</string>
+    <string name="preview_clear">مسح</string>
+    <string name="preview_clip_in">\\clip داخل المنطقة</string>
+    <string name="preview_clip_out">\\iclip عكسي</string>
+    <string name="preview_typesetting">المحاكاة</string>
+    <string name="preview_exit_typesetting">إنهاء المحاكاة</string>
+    <string name="preview_karaoke">كاريوكي</string>
+    <string name="preview_exit_karaoke">إنهاء الكاريوكي</string>
+
+    <!-- عناوين جدول الترجمة -->
+    <string name="preview_grid_start">البداية</string>
+    <string name="preview_grid_end">النهاية</string>
+    <string name="preview_grid_style">النمط</string>
+    <string name="preview_grid_text">النص</string>
+    <string name="subtitle_no_text">(بلا نص)</string>
+</resources>
