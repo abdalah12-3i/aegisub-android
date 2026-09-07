@@ -26,7 +26,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,12 +50,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.samgum.aegisub.data.font.FontManager
 import io.github.samgum.aegisub.domain.model.AssColor
 import io.github.samgum.aegisub.domain.model.AssStyle
 import io.github.samgum.aegisub.feature.editor.components.EditorActions
+
+@Composable
+private fun tr(en: String, ar: String, tr: String = en): String {
+    val lang = LocalConfiguration.current.locales[0]?.language ?: "en"
+    return when {
+        lang.startsWith("ar") -> ar
+        lang.startsWith("tr") -> tr
+        else -> en
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,10 +82,10 @@ fun StyleEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Styles (${styles.size})") },
+                title = { Text(tr("Styles (${styles.size})", "الأنماط (${styles.size})", "Stiller (${styles.size})")) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = tr("Back", "رجوع", "Geri"))
                     }
                 },
                 actions = {
@@ -79,7 +96,7 @@ fun StyleEditorScreen(
                         onRedo = viewModel::redo,
                     )
                     IconButton(onClick = viewModel::addStyle) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add Style")
+                        Icon(Icons.Filled.Add, contentDescription = tr("Add Style", "إضافة نمط", "Stil Ekle"))
                     }
                 },
             )
@@ -87,7 +104,7 @@ fun StyleEditorScreen(
     ) { padding ->
         if (styles.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No styles yet, tap + in top bar to add", style = MaterialTheme.typography.bodyLarge)
+                Text(tr("No styles yet, tap + in top bar to add", "لا توجد أنماط بعد، اضغط + بالأعلى للإضافة", "Henüz stil yok"), style = MaterialTheme.typography.bodyLarge)
             }
         } else {
             LazyColumn(
@@ -123,7 +140,7 @@ private fun StyleCard(
                         .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
                 )
                 Text(
-                    style.name.ifEmpty { "(Unnamed)" },
+                    style.name.ifEmpty { tr("(Unnamed)", "(بدون اسم)", "(İsimsiz)") },
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(start = 8.dp).weight(1f),
                 )
@@ -142,89 +159,118 @@ private fun StyleCard(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete Style") },
-            text = { Text("Delete style \"${style.name.ifEmpty { "Unnamed" }}\"? Events referencing it will use fallback style. Undo is available.") },
-            confirmButton = { TextButton(onClick = { onDelete(); confirmDelete = false }) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+            title = { Text(tr("Delete Style", "حذف النمط", "Stili Sil")) },
+            text = { Text(tr("Delete style \"${style.name.ifEmpty { "Unnamed" }}\"? Events referencing it will use fallback style. Undo is available.", "هل تريد حذف النمط \"${style.name.ifEmpty { "بدون اسم" }}\"؟ الأسطر المرتبطة به ستستخدم النمط البديل. يمكنك التراجع.", "Stil silinsin mi?")) },
+            confirmButton = { TextButton(onClick = { onDelete(); confirmDelete = false }) { Text(tr("Delete", "حذف", "Sil")) } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(tr("Cancel", "إلغاء", "İptal")) } },
         )
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun StyleFields(style: AssStyle, onUpdate: (transform: (AssStyle) -> AssStyle) -> Unit) {
+    val context = LocalContext.current
+    val fontOptions = remember { FontManager.getAvailableFontNames(context) }
+    var fontExpanded by remember { mutableStateOf(false) }
+
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        SectionLabel("Name & Font")
+        SectionLabel(tr("Name & Font", "الاسم والخط", "İsim ve Yazı Tipi"))
         OutlinedTextField(
             value = style.name,
             onValueChange = { v -> onUpdate { it.copy(name = v) } },
-            label = { Text("Style Name") },
+            label = { Text(tr("Style Name", "اسم النمط", "Stil Adı")) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = style.font,
-                onValueChange = { v -> onUpdate { it.copy(font = v) } },
-                label = { Text("Font") },
-                singleLine = true,
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ExposedDropdownMenuBox(
+                expanded = fontExpanded,
+                onExpandedChange = { fontExpanded = it },
                 modifier = Modifier.weight(1f),
-            )
-            NumberField("Size", style.fontSize) { v -> onUpdate { it.copy(fontSize = v) } }
+            ) {
+                OutlinedTextField(
+                    value = style.font,
+                    onValueChange = { v -> onUpdate { it.copy(font = v) } },
+                    label = { Text(tr("Font", "الخط", "Yazı Tipi")) },
+                    singleLine = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = fontExpanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                )
+                if (fontOptions.isNotEmpty()) {
+                    DropdownMenu(
+                        expanded = fontExpanded,
+                        onDismissRequest = { fontExpanded = false },
+                    ) {
+                        fontOptions.forEach { fName ->
+                            DropdownMenuItem(
+                                text = { Text(fName) },
+                                onClick = {
+                                    onUpdate { it.copy(font = fName) }
+                                    fontExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+            NumberField(tr("Size", "الحجم", "Boyut"), style.fontSize) { v -> onUpdate { it.copy(fontSize = v) } }
         }
 
-        SectionLabel("Colors (Tap to expand RGBA)")
-        AssColorField("Primary Color", style.primary) { c -> onUpdate { it.copy(primary = c) } }
-        AssColorField("Secondary Color", style.secondary) { c -> onUpdate { it.copy(secondary = c) } }
-        AssColorField("Outline Color", style.outline) { c -> onUpdate { it.copy(outline = c) } }
-        AssColorField("Shadow Color", style.shadow) { c -> onUpdate { it.copy(shadow = c) } }
+        SectionLabel(tr("Colors (Tap to expand RGBA)", "الألوان (اضغط لضبط RGBA)", "Renkler"))
+        AssColorField(tr("Primary Color", "اللون الأساسي", "Birincil Renk"), style.primary) { c -> onUpdate { it.copy(primary = c) } }
+        AssColorField(tr("Secondary Color", "اللون الثانوي", "İkincil Renk"), style.secondary) { c -> onUpdate { it.copy(secondary = c) } }
+        AssColorField(tr("Outline Color", "لون الحدود (Outline)", "Kenarlık Rengi"), style.outline) { c -> onUpdate { it.copy(outline = c) } }
+        AssColorField(tr("Shadow Color", "لون الظل (Shadow)", "Gölge Rengi"), style.shadow) { c -> onUpdate { it.copy(shadow = c) } }
 
-        SectionLabel("Font Attributes")
+        SectionLabel(tr("Font Attributes", "سمات الخط", "Yazı Tipi Nitelikleri"))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ToggleChip("Bold", style.bold) { v -> onUpdate { it.copy(bold = v) } }
-            ToggleChip("Italic", style.italic) { v -> onUpdate { it.copy(italic = v) } }
-            ToggleChip("Underline", style.underline) { v -> onUpdate { it.copy(underline = v) } }
-            ToggleChip("Strikeout", style.strikeout) { v -> onUpdate { it.copy(strikeout = v) } }
+            ToggleChip(tr("Bold", "عريض", "Kalın"), style.bold) { v -> onUpdate { it.copy(bold = v) } }
+            ToggleChip(tr("Italic", "مائل", "İtalik"), style.italic) { v -> onUpdate { it.copy(italic = v) } }
+            ToggleChip(tr("Underline", "تسطير", "Altı Çizili"), style.underline) { v -> onUpdate { it.copy(underline = v) } }
+            ToggleChip(tr("Strikeout", "يتوسطه خط", "Üstü Çizili"), style.strikeout) { v -> onUpdate { it.copy(strikeout = v) } }
         }
 
-        SectionLabel("Alignment (\\an 1-9)")
+        SectionLabel(tr("Alignment (\\an 1-9)", "المحاذاة (\\an 1-9)", "Hizalama"))
         AlignmentGrid(style.alignment) { a -> onUpdate { it.copy(alignment = a) } }
 
-        SectionLabel("Margins (L / R / V)")
+        SectionLabel(tr("Margins (L / R / V)", "الهوامش (يسار / يمين / عمودي)", "Kenar Boşlukları"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField("Left", style.margins.left.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(left = v.toInt())) } }
-            NumberField("Right", style.margins.right.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(right = v.toInt())) } }
-            NumberField("Vert", style.margins.vertical.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(vertical = v.toInt())) } }
+            NumberField(tr("Left", "يسار", "Sol"), style.margins.left.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(left = v.toInt())) } }
+            NumberField(tr("Right", "يمين", "Sağ"), style.margins.right.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(right = v.toInt())) } }
+            NumberField(tr("Vertical", "عمودي", "Dikey"), style.margins.vertical.toDouble()) { v -> onUpdate { it.copy(margins = it.margins.copy(vertical = v.toInt())) } }
         }
 
-        SectionLabel("Outline & Shadow")
+        SectionLabel(tr("Outline & Shadow", "الحدود والظل", "Kenarlık ve Gölge"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField("Outline Width", style.outlineWidth) { v -> onUpdate { it.copy(outlineWidth = v) } }
-            NumberField("Shadow Depth", style.shadowWidth) { v -> onUpdate { it.copy(shadowWidth = v) } }
+            NumberField(tr("Outline Width", "سمك الحد", "Kenarlık Kalınlığı"), style.outlineWidth) { v -> onUpdate { it.copy(outlineWidth = v) } }
+            NumberField(tr("Shadow Depth", "عمق الظل", "Gölge Derinliği"), style.shadowWidth) { v -> onUpdate { it.copy(shadowWidth = v) } }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = style.borderStyle == 1,
                 onClick = { onUpdate { it.copy(borderStyle = 1) } },
-                label = { Text("Outline + Shadow") },
+                label = { Text(tr("Outline + Shadow", "حد + ظل", "Kenarlık + Gölge")) },
             )
             FilterChip(
                 selected = style.borderStyle == 3,
                 onClick = { onUpdate { it.copy(borderStyle = 3) } },
-                label = { Text("Opaque Box") },
+                label = { Text(tr("Opaque Box", "خلفية معتمة", "Opak Kutu")) },
             )
         }
 
-        SectionLabel("Transform (Scale / Spacing / Rotation)")
+        SectionLabel(tr("Transform (Scale / Spacing / Rotation)", "التحويل (التحجيم / التباعد / التدوير)", "Dönüştürme"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberField("ScaleX %", style.scaleX) { v -> onUpdate { it.copy(scaleX = v) } }
-            NumberField("ScaleY %", style.scaleY) { v -> onUpdate { it.copy(scaleY = v) } }
-            NumberField("Spacing", style.spacing) { v -> onUpdate { it.copy(spacing = v) } }
-            NumberField("Angle °", style.angle) { v -> onUpdate { it.copy(angle = v) } }
+            NumberField(tr("ScaleX %", "تحجيم أفقي X %", "ÖlçekX %"), style.scaleX) { v -> onUpdate { it.copy(scaleX = v) } }
+            NumberField(tr("ScaleY %", "تحجيم رأسي Y %", "ÖlçekY %"), style.scaleY) { v -> onUpdate { it.copy(scaleY = v) } }
+            NumberField(tr("Spacing", "تباعد الأحرف", "Karakter Boşluğu"), style.spacing) { v -> onUpdate { it.copy(spacing = v) } }
+            NumberField(tr("Angle °", "زاوية التدوير °", "Açı °"), style.angle) { v -> onUpdate { it.copy(angle = v) } }
         }
 
-        SectionLabel("Encoding")
-        NumberField("Encoding", style.encoding.toDouble()) { v -> onUpdate { it.copy(encoding = v.toInt()) } }
+        SectionLabel(tr("Encoding", "الترميز", "Kodlama"))
+        NumberField(tr("Encoding", "الترميز", "Kodlama"), style.encoding.toDouble()) { v -> onUpdate { it.copy(encoding = v.toInt()) } }
     }
 }
 
