@@ -1,8 +1,12 @@
 package io.github.samgum.aegisub.ui.home
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import io.github.samgum.aegisub.data.mkv.MkvExtractor
 import io.github.samgum.aegisub.data.repository.Project
 import io.github.samgum.aegisub.data.repository.ProjectRepository
 import io.github.samgum.aegisub.domain.format.AssFormat
@@ -16,14 +20,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * 主屏 ViewModel：暴露项目列表，提供新建样例项目。
- *
- * @author 伤感咩吖
- */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repo: ProjectRepository,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     val projects: StateFlow<List<Project>> = repo.observeProjects()
@@ -36,30 +36,43 @@ class HomeViewModel @Inject constructor(
                     AssEvent(
                         start = SubTime.ofMillis(1_000),
                         end = SubTime.ofMillis(3_000),
-                        text = "欢迎来到 Aegisub Android",
+                        text = "Welcome to Aegisub Android",
                     ),
                     AssEvent(
                         start = SubTime.ofMillis(3_200),
                         end = SubTime.ofMillis(6_000),
-                        text = "点击字幕行即可编辑（Task 2B）",
+                        text = "Tap a subtitle line to edit",
                     ),
                     AssEvent(
                         comment = true,
-                        text = "这是一条注释行示例",
+                        text = "This is a comment line example",
                     ),
                 ),
             )
             val content = AssFormat.write(sample)
             val now = System.currentTimeMillis()
-            repo.createProject(name = "字幕工程 $now", format = "ass", content = content)
+            repo.createProject(name = "Project $now", format = "ass", content = content)
         }
     }
 
-    /** 导入外部字幕文件：界面读取文件名+内容后调用，解析格式并建工程。 */
     fun importSubtitle(fileName: String, content: String) {
         viewModelScope.launch {
             val resolved = SubtitleImport.resolve(fileName, content)
             repo.createProject(name = resolved.name, format = resolved.format, content = content)
+        }
+    }
+
+    /** استيراد فيديو MKV واستخراج الترجمة وربط الفيديو بالمعاينة فوراً */
+    fun importMkvVideo(name: String, uri: Uri, trackIndex: Int?) {
+        viewModelScope.launch {
+            val (format, content) = if (trackIndex != null) {
+                MkvExtractor.extractSubtitleContent(context, uri, trackIndex)
+            } else {
+                "ass" to MkvExtractor.defaultAssScript()
+            }
+            val cleanName = name.substringBeforeLast('.')
+            val projectId = repo.createProject(name = cleanName, format = format, content = content)
+            repo.setMediaUri(projectId, uri.toString())
         }
     }
 }
