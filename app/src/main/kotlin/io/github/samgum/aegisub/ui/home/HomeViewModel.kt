@@ -68,7 +68,7 @@ class HomeViewModel @Inject constructor(
             val (format, content) = if (trackIndex != null) {
                 MkvExtractor.extractSubtitleContent(context, uri, trackIndex)
             } else {
-                "ass" to MkvExtractor.defaultAssScript()
+                "ass" to MkvExtractor.defaultAssHeader()
             }
             val cleanName = name.substringBeforeLast('.')
             val projectId = repo.createProject(name = cleanName, format = format, content = content)
