@@ -1,39 +1,59 @@
 package io.github.samgum.aegisub.feature.editor.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
+import io.github.samgum.aegisub.data.spell.SpellCheckManager
 import io.github.samgum.aegisub.domain.model.AssEvent
 import io.github.samgum.aegisub.domain.time.SubTime
 import io.github.samgum.aegisub.feature.editor.R
 
-/**
- * 事件编辑字段集：文本/起止时间/样式/层。容器无关——
- * 由 EventEditSheet（底栏，compact）或 EventDetail（右栏，expanded）包装复用。
- * 字段变化实时回写；时间输入容错解析，非法值不回写。
- *
- * @author 伤感咩吖
- */
-@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun tr(en: String, ar: String, tr: String = en): String {
+    val lang = LocalConfiguration.current.locales[0]?.language ?: "en"
+    return when {
+        lang.startsWith("ar") -> ar
+        lang.startsWith("tr") -> tr
+        else -> en
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EventEditFields(
     event: AssEvent,
@@ -44,16 +64,112 @@ fun EventEditFields(
     onLayerChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
+    // فحص الكلمات الخاطئة إملائياً
+    var misspelledWords by remember(event.text) {
+        mutableStateOf(SpellCheckManager.checkMisspelledWords(context, event.text))
+    }
+
+    LaunchedEffect(Unit) {
+        SpellCheckManager.loadDictionaries(context)
+        misspelledWords = SpellCheckManager.checkMisspelledWords(context, event.text)
+    }
+
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // 文本（实时回写）
+        // تحويل النص لوضع خط أحمر متعرج تحت الكلمات الخاطئة
+        val errorColor = MaterialTheme.colorScheme.error
+        val spellVisualTransformation = remember(misspelledWords, errorColor) {
+            VisualTransformation { annotatedString ->
+                val fullText = annotatedString.text
+                val builder = buildAnnotatedString {
+                    append(fullText)
+                    misspelledWords.forEach { errorWord ->
+                        var startIndex = fullText.indexOf(errorWord, ignoreCase = true)
+                        while (startIndex >= 0) {
+                            val endIndex = startIndex + errorWord.length
+                            addStyle(
+                                style = SpanStyle(
+                                    color = errorColor,
+                                    textDecoration = TextDecoration.Underline,
+                                ),
+                                start = startIndex,
+                                end = endIndex,
+                            )
+                            startIndex = fullText.indexOf(errorWord, endIndex, ignoreCase = true)
+                        }
+                    }
+                }
+                TransformedText(builder, OffsetMapping.Identity)
+            }
+        }
+
+        // خانة كتابة نص الترجمة مع الخط الأحمر تحت الخطأ
         OutlinedTextField(
             value = event.text,
             onValueChange = onTextChanged,
             label = { Text(stringResource(R.string.edit_text)) },
+            visualTransformation = spellVisualTransformation,
             modifier = Modifier.fillMaxWidth(),
         )
 
-        // 起止时间（本地缓存输入串，容错解析后回写）
+        // شريط الكلمات الخاطئة واقتراحات التصحيح السريعة
+        if (misspelledWords.isNotEmpty()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                Text(
+                    text = tr("Spelling Suggestions (Tap to fix):", "اقتراحات التدقيق الإملائي (اضغط للتصحيح):", "Yazım Önerileri (Düzeltmek için dokunun):"),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    misspelledWords.forEach { badWord ->
+                        var showSuggestions by remember { mutableStateOf(false) }
+                        val suggestions = remember(badWord) { SpellCheckManager.getSuggestions(badWord) }
+
+                        Box {
+                            AssistChip(
+                                onClick = { showSuggestions = true },
+                                label = { Text("⚠ $badWord") },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    labelColor = MaterialTheme.colorScheme.onErrorContainer,
+                                ),
+                            )
+                            if (showSuggestions) {
+                                DropdownMenu(
+                                    expanded = showSuggestions,
+                                    onDismissRequest = { showSuggestions = false },
+                                ) {
+                                    if (suggestions.isEmpty()) {
+                                        DropdownMenuItem(
+                                            text = { Text(tr("No suggestions found", "لا توجد اقتراحات مطابقة", "Öneri bulunamadı")) },
+                                            onClick = { showSuggestions = false },
+                                        )
+                                    } else {
+                                        suggestions.forEach { goodWord ->
+                                            DropdownMenuItem(
+                                                text = { Text("✔ $goodWord") },
+                                                onClick = {
+                                                    // استبدال الكلمة الخاطئة بالكلمة الصحيحة في النص فوراً
+                                                    val fixedText = event.text.replaceFirst(badWord, goodWord, ignoreCase = true)
+                                                    onTextChanged(fixedText)
+                                                    showSuggestions = false
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // أوقات البداية والنهاية
         var startText by remember(event.id) { mutableStateOf(event.start.toAssString(false)) }
         var endText by remember(event.id) { mutableStateOf(event.end.toAssString(false)) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -81,7 +197,7 @@ fun EventEditFields(
             )
         }
 
-        // 样式下拉（可手输）
+        // قائمة الأنماط
         var styleExpanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(
             expanded = styleExpanded,
@@ -115,7 +231,7 @@ fun EventEditFields(
             }
         }
 
-        // 层（数字）
+        // الطبقة
         OutlinedTextField(
             value = event.layer.toString(),
             onValueChange = { raw -> raw.toIntOrNull()?.let(onLayerChanged) },
