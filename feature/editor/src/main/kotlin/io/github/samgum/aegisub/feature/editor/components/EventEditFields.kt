@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -36,6 +38,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import io.github.samgum.aegisub.data.spell.SpellCheckManager
@@ -66,7 +69,6 @@ fun EventEditFields(
 ) {
     val context = LocalContext.current
 
-    // فحص الكلمات الخاطئة إملائياً
     var misspelledWords by remember(event.text) {
         mutableStateOf(SpellCheckManager.checkMisspelledWords(context, event.text))
     }
@@ -77,7 +79,6 @@ fun EventEditFields(
     }
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // تحويل النص لوضع خط أحمر متعرج تحت الكلمات الخاطئة
         val errorColor = MaterialTheme.colorScheme.error
         val spellVisualTransformation = remember(misspelledWords, errorColor) {
             VisualTransformation { annotatedString ->
@@ -104,7 +105,7 @@ fun EventEditFields(
             }
         }
 
-        // خانة كتابة نص الترجمة مع الخط الأحمر تحت الخطأ
+        // خانة نص الترجمة مع التدقيق الإملائي
         OutlinedTextField(
             value = event.text,
             onValueChange = onTextChanged,
@@ -113,7 +114,7 @@ fun EventEditFields(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        // شريط الكلمات الخاطئة واقتراحات التصحيح السريعة
+        // اقتراحات التصحيح السريعة
         if (misspelledWords.isNotEmpty()) {
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
                 Text(
@@ -153,7 +154,6 @@ fun EventEditFields(
                                             DropdownMenuItem(
                                                 text = { Text("✔ $goodWord") },
                                                 onClick = {
-                                                    // استبدال الكلمة الخاطئة بالكلمة الصحيحة في النص فوراً
                                                     val fixedText = event.text.replaceFirst(badWord, goodWord, ignoreCase = true)
                                                     onTextChanged(fixedText)
                                                     showSuggestions = false
@@ -169,32 +169,35 @@ fun EventEditFields(
             }
         }
 
-        // أوقات البداية والنهاية
-        var startText by remember(event.id) { mutableStateOf(event.start.toAssString(false)) }
-        var endText by remember(event.id) { mutableStateOf(event.end.toAssString(false)) }
+        // خانات التوقيت (مضبوطة لتعرض وتحدث الوقت دائماً وباتجاه صحيح)
+        var startText by remember(event.start) { mutableStateOf(event.start.toAssString(false)) }
+        var endText by remember(event.end) { mutableStateOf(event.end.toAssString(false)) }
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = startText,
-                onValueChange = {
-                    startText = it
-                    runCatching { SubTime.parseAss(it) }
-                        .onSuccess { s -> onTimesChanged(s, event.end) }
-                },
-                label = { Text(stringResource(R.string.edit_start)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(0.5f),
-            )
-            OutlinedTextField(
-                value = endText,
-                onValueChange = {
-                    endText = it
-                    runCatching { SubTime.parseAss(it) }
-                        .onSuccess { e -> onTimesChanged(event.start, e) }
-                },
-                label = { Text(stringResource(R.string.edit_end)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                OutlinedTextField(
+                    value = startText,
+                    onValueChange = {
+                        startText = it
+                        runCatching { SubTime.parseAss(it) }
+                            .onSuccess { s -> onTimesChanged(s, event.end) }
+                    },
+                    label = { Text(stringResource(R.string.edit_start)) },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = endText,
+                    onValueChange = {
+                        endText = it
+                        runCatching { SubTime.parseAss(it) }
+                            .onSuccess { e -> onTimesChanged(event.start, e) }
+                    },
+                    label = { Text(stringResource(R.string.edit_end)) },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
 
         // قائمة الأنماط
