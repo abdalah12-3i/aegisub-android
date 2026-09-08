@@ -58,11 +58,12 @@ fun SubtitleOverlay(
             val outlineWidthPx = (style.outlineWidth * fontScaleUsed).toFloat().coerceIn(1.5f, fontPx * 0.12f)
             val shadowPx = (style.shadowWidth * fontScaleUsed).toFloat().coerceAtMost(fontPx * 0.2f)
 
-            // 1. فحص إذا كان السطر عبارة عن رسم فيكتور \p1
+            // 1. فحص ومعالجة رسم مسارات الفيكتور \p1
             val drawingCommands = extractDrawingCommands(info.text)
             if (drawingCommands != null) {
-                val originX = if (info.pos != null) info.pos.first * scaleX else 0f
-                val originY = if (info.pos != null) info.pos.second * scaleY else 0f
+                val currentPos = info.pos
+                val originX = if (currentPos != null) currentPos.first * scaleX else 0f
+                val originY = if (currentPos != null) currentPos.second * scaleY else 0f
                 val drawingPath = parseAssDrawing(drawingCommands, originX, originY, scaleX, scaleY)
                 if (drawingPath != null) {
                     if (outlineWidthPx > 0f) {
@@ -133,19 +134,36 @@ fun SubtitleOverlay(
     }
 }
 
-/** استخراج أوامر رسم الفيكتور بعد وسم \p1 */
-private fun extractDrawingCommands(text: String): String? {
-    val pMatch = Regex("""\\p([1-9])""").find(text) ?: return null
-    val afterP = text.substring(pMatch.range.last + 1)
-    val closeBrace = afterP.indexOf('}')
-    val drawingBody = if (closeBrace >= 0) afterP.substring(closeBrace + 1) else afterP
-    val p0Idx = drawingBody.indexOf("""\p0""")
-    val rawDrawing = if (p0Idx >= 0) drawingBody.substring(0, p0Idx) else drawingBody
-    val clean = rawDrawing.replace(Regex("""\{[^}]*\}"""), "").trim()
-    return if (clean.isNotBlank()) clean else null
+private fun parseInlineColor(raw: String): Color? {
+    val regex = Regex("""\\(?:c|1c)&H([0-9a-fA-F]+)&?""")
+    val match = regex.find(raw) ?: return null
+    val hex = match.groupValues[1].removePrefix("&H").removePrefix("&h").removeSuffix("&")
+    return runCatching {
+        val c = AssColor.parseAss("&H$hex&")
+        Color(c.r, c.g, c.b, 255)
+    }.getOrNull()
 }
 
-/** فك شفرة مسار الرسم الهندسية m, l, b, c وتحويلها إلى Path في Compose */
+private fun parseInlineFont(raw: String): String? {
+    val regex = Regex("""\\fn([^\}\\]+)""")
+    val match = regex.find(raw) ?: return null
+    return match.groupValues[1].trim().ifBlank { null }
+}
+
+private fun parseInlineFontSize(raw: String): Double? {
+    val regex = Regex("""\\fs([0-9]+(?:\.[0-9]+)?)""")
+    val match = regex.find(raw) ?: return null
+    return match.groupValues[1].toDoubleOrNull()
+}
+
+private fun stripAssTags(text: String): String {
+    return text.replace(Regex("""\{[^}]*\}"""), "")
+        .replace("\\N", "\n")
+        .replace("\\n", "\n")
+        .replace("\\h", " ")
+        .trim()
+}
+
 private fun parseAssDrawing(
     drawingText: String,
     originX: Float,
@@ -175,7 +193,7 @@ private fun parseAssDrawing(
                         val y = tokens[i + 1].toFloatOrNull() ?: 0f
                         path.moveTo(originX + x * scaleX, originY + y * scaleY)
                         i += 2
-                        currentCmd = "l" // النقاط اللاحقة تعامل كخط مستقيم تلقائياً
+                        currentCmd = "l"
                     } else i++
                 }
                 "l" -> {
@@ -214,36 +232,6 @@ private fun parseAssDrawing(
     } catch (e: Exception) {
         return null
     }
-}
-
-private fun parseInlineColor(raw: String): Color? {
-    val regex = Regex("""\\(?:c|1c)&H([0-9a-fA-F]+)&?""")
-    val match = regex.find(raw) ?: return null
-    val hex = match.groupValues[1].removePrefix("&H").removePrefix("&h").removeSuffix("&")
-    return runCatching {
-        val c = AssColor.parseAss("&H$hex&")
-        Color(c.r, c.g, c.b, 255)
-    }.getOrNull()
-}
-
-private fun parseInlineFont(raw: String): String? {
-    val regex = Regex("""\\fn([^\}\\]+)""")
-    val match = regex.find(raw) ?: return null
-    return match.groupValues[1].trim().ifBlank { null }
-}
-
-private fun parseInlineFontSize(raw: String): Double? {
-    val regex = Regex("""\\fs([0-9]+(?:\.[0-9]+)?)""")
-    val match = regex.find(raw) ?: return null
-    return match.groupValues[1].toDoubleOrNull()
-}
-
-private fun stripAssTags(text: String): String {
-    return text.replace(Regex("""\{[^}]*\}"""), "")
-        .replace("\\N", "\n")
-        .replace("\\n", "\n")
-        .replace("\\h", " ")
-        .trim()
 }
 
 private fun computeTopLeftSafe(
