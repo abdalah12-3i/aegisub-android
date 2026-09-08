@@ -6,6 +6,7 @@ import android.media.MediaFormat
 import android.net.Uri
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+import java.util.Locale
 
 data class MkvSubtitleTrack(
     val trackIndex: Int,
@@ -32,7 +33,6 @@ object MkvExtractor {
         else -> code.uppercase()
     }
 
-    /** فحص ملف الـ MKV واستخراج جميع مسارات الترجمة */
     fun getSubtitleTracks(context: Context, uri: Uri): List<MkvSubtitleTrack> {
         val extractor = MediaExtractor()
         val tracks = mutableListOf<MkvSubtitleTrack>()
@@ -84,7 +84,6 @@ object MkvExtractor {
         return tracks
     }
 
-    /** استخراج محتوى الترجمة بالكامل وبأوقات البداية والنهاية الحقيقية */
     fun extractSubtitleContent(context: Context, uri: Uri, trackIndex: Int): Pair<String, String> {
         val extractor = MediaExtractor()
         try {
@@ -101,7 +100,6 @@ object MkvExtractor {
             val buffer = ByteBuffer.allocate(256 * 1024)
             val events = mutableListOf<String>()
 
-            // قراءة هيدر ASS الأصلي إن وجد
             var assHeader = ""
             if (formatName == "ass" && format.containsKey("csd-0")) {
                 val csd = format.getByteBuffer("csd-0")
@@ -125,19 +123,16 @@ object MkvExtractor {
 
                 if (rawPacket.isNotBlank()) {
                     if (formatName == "ass") {
-                        // إذا كان السطر هو سطر حوار كامل
                         if (rawPacket.startsWith("Dialogue:", true) || rawPacket.startsWith("Comment:", true)) {
                             events.add(rawPacket)
                         } else {
-                            // حزمة Matroska للـ ASS تأتي عادة: ReadOrder, Layer, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                             val commaIndex = rawPacket.indexOf(',')
                             val cleanPacket = if (commaIndex in 0 until 10 && rawPacket.substring(0, commaIndex).all { it.isDigit() }) {
-                                rawPacket.substring(commaIndex + 1) // تجاوز ReadOrder
+                                rawPacket.substring(commaIndex + 1)
                             } else {
                                 rawPacket
                             }
 
-                            // تقسيم حقول ASS
                             val parts = cleanPacket.split(",", limit = 8)
                             val layer = parts.getOrNull(0)?.trim() ?: "0"
                             val style = parts.getOrNull(1)?.trim()?.ifBlank { "Default" } ?: "Default"
@@ -149,12 +144,11 @@ object MkvExtractor {
                             val dialogueText = parts.getOrNull(7) ?: cleanPacket
 
                             val startMs = (startTimeUs / 1000).coerceAtLeast(0)
-                            val endMs = startMs + 3000L // مدة افتراضية 3 ثوانٍ إن لم تكن محددة
+                            val endMs = startMs + 3000L
 
                             events.add("Dialogue: $layer,${formatAssTime(startMs)},${formatAssTime(endMs)},$style,$actor,$ml,$mr,$mv,$effect,$dialogueText")
                         }
                     } else {
-                        // معالجة SRT
                         val startMs = (startTimeUs / 1000).coerceAtLeast(0)
                         val endMs = startMs + 3000L
                         events.add("${cueNumber++}\n${formatSrtTime(startMs)} --> ${formatSrtTime(endMs)}\n$rawPacket\n")
@@ -193,7 +187,7 @@ object MkvExtractor {
         val m = (total % 3600_000) / 60_000
         val s = (total % 60_000) / 1000
         val cs = (total % 1000) / 10
-        return "%d:%02d:%02d.%02d".format(h, m, s, cs)
+        return String.format(Locale.US, "%d:%02d:%02d.%02d", h, m, s, cs)
     }
 
     private fun formatSrtTime(ms: Long): String {
@@ -202,7 +196,7 @@ object MkvExtractor {
         val m = (total % 3600_000) / 60_000
         val s = (total % 60_000) / 1000
         val mm = total % 1000
-        return "%02d:%02d:%02d,%03d".format(h, m, s, mm)
+        return String.format(Locale.US, "%02d:%02d:%02d,%03d", h, m, s, mm)
     }
 
     fun defaultAssHeader(): String = """
