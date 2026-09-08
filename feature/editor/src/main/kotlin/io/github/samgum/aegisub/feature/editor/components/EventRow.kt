@@ -26,13 +26,22 @@ fun EventRow(
     val clickAction = if (selectionMode) onToggleSelect else onClick
     val longClickAction = if (selectionMode) onToggleSelect else onLongClick
 
+    // تمييز أسطر الرسم والفيكتور عن الأسطر الفارغة
+    val isDrawing = event.text.contains(Regex("""\\p[1-9]"""))
+    val displayHeadline = when {
+        event.strippedText.isNotBlank() -> event.strippedText
+        isDrawing -> "[🎨 رسم / Drawing]"
+        event.text.isNotBlank() -> "[وسوم / Tags]"
+        else -> "(No text)"
+    }
+
     ListItem(
         headlineContent = {
             Text(
-                text = event.strippedText.ifBlank { "(No text)" },
+                text = displayHeadline,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = if (event.comment) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
+                color = if (event.comment || isDrawing) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
             )
         },
         supportingContent = {
