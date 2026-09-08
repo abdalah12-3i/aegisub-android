@@ -220,7 +220,6 @@ private fun VideoBlock(
     val playResY = state.script.getScriptInfo("PlayResY")?.toIntOrNull()?.let { if (it <= 288) 1080 else it } ?: 1080
 
     Column(modifier) {
-        // صندوق الفيديو بنسبة 16:9 المطابقة لأبعاد الأنمي لمنع انزياح الترجمة وخروجها عن الشاشة
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -231,7 +230,6 @@ private fun VideoBlock(
             PlayerSurface(player = viewModel.videoPlayer, modifier = Modifier.fillMaxSize())
             ActiveSubtitleLayer(viewModel = viewModel)
 
-            // تفعيل المحاكاة المرئية فوق الفيديو
             if (vtActive && selectedEvent != null) {
                 VisualTypesettingOverlay(
                     playResX = playResX,
@@ -297,7 +295,6 @@ private fun CompactPreview(
             onVtToolModeChange = { vtToolMode = it },
         )
 
-        // شريط الأزرار السريع (يقبل التمرير الأفقي حتى لا تختفي أزرار المحاكاة على شاشة الجوال)
         Row(
             Modifier
                 .fillMaxWidth()
@@ -319,12 +316,10 @@ private fun CompactPreview(
                 Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
             }
 
-            // زر المحاكاة المرئية البارز
             FilterChip(
                 selected = vtActive,
                 onClick = {
                     vtActive = !vtActive
-                    // إذا لم يكن هناك سطر محدد، نحدد أول سطر تلقائياً لكي تظهر مقابض السحب فوراً
                     if (selected == null && state.script.events.isNotEmpty()) {
                         viewModel.selectEvent(state.script.events.first().id)
                     }
@@ -332,7 +327,6 @@ private fun CompactPreview(
                 label = { Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting)) },
             )
 
-            // زر الكاريوكي
             FilterChip(
                 selected = karaokeMode,
                 onClick = {
@@ -344,13 +338,11 @@ private fun CompactPreview(
                 label = { Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke)) },
             )
 
-            // زر التبديل بين الموجة والمخطط الطيفي
             TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
                 Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
             }
         }
 
-        // لوحة التحكم في المحاكاة عند تفعيلها
         if (vtActive && selected != null) {
             Column(Modifier.fillMaxWidth().heightIn(max = 160.dp).verticalScroll(rememberScrollState())) {
                 VisualTypesettingControls(
@@ -375,7 +367,6 @@ private fun CompactPreview(
             AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.height(110.dp).fillMaxWidth())
         }
 
-        // قائمة أسطر الترجمة
         EventListColumn(
             events = state.script.events,
             currentEventId = state.currentEventId,
@@ -580,6 +571,14 @@ private fun SubtitleGridRow(
         isCurrent -> MaterialTheme.colorScheme.secondaryContainer
         else -> Color.Transparent
     }
+    val isDrawing = event.text.contains(Regex("""\\p[1-9]"""))
+    val displayHeadline = when {
+        event.strippedText.isNotBlank() -> event.strippedText
+        isDrawing -> "[🎨 رسم / Drawing]"
+        event.text.isNotBlank() -> "[وسوم / Tags]"
+        else -> stringResource(R.string.subtitle_no_text)
+    }
+
     Row(
         Modifier
             .fillMaxWidth()
@@ -599,12 +598,12 @@ private fun SubtitleGridRow(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            event.strippedText.ifBlank { stringResource(R.string.subtitle_no_text) },
+            displayHeadline,
             Modifier.weight(0.43f),
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = if (event.comment) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
+            color = if (event.comment || isDrawing) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -915,14 +914,21 @@ private fun PreviewEventRow(event: AssEvent, isCurrent: Boolean, isSelected: Boo
         isCurrent -> MaterialTheme.colorScheme.secondaryContainer
         else -> Color.Transparent
     }
+    val isDrawing = event.text.contains(Regex("""\\p[1-9]"""))
+    val displayHeadline = when {
+        event.strippedText.isNotBlank() -> event.strippedText
+        isDrawing -> "[🎨 رسم / Drawing]"
+        event.text.isNotBlank() -> "[وسوم / Tags]"
+        else -> stringResource(R.string.subtitle_no_text)
+    }
+
     ListItem(
         headlineContent = {
             Text(
-                text = event.strippedText.ifBlank { stringResource(R.string.subtitle_no_text) },
+                text = displayHeadline,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                color = if (event.comment) MaterialTheme.colorScheme.outline
-                else MaterialTheme.colorScheme.onSurface,
+                color = if (event.comment || isDrawing) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
             )
         },
         supportingContent = {
