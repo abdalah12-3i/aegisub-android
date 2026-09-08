@@ -46,7 +46,6 @@ fun SubtitleOverlay(
             val scaleY = (size.height / resY.toFloat()).coerceAtLeast(0.001f)
             val scaleX = (size.width / resX.toFloat()).coerceAtLeast(0.001f)
 
-            // قراءة الألوان والأحجام والخطوط المخصصة من السطر
             val parsedColor = parseInlineColor(info.text) ?: style.primary.toColor()
             val parsedFontName = parseInlineFont(info.text) ?: style.font
             val parsedFontSize = parseInlineFontSize(info.text) ?: style.fontSize
@@ -55,7 +54,6 @@ fun SubtitleOverlay(
             val fontPx = rawFontPx.coerceIn(10f, size.height * 0.30f)
             val fontScaleUsed = fontPx / (parsedFontSize.coerceAtLeast(0.0001).toFloat())
             
-            // ضبط سمك التحديد والظل ليكون ناعماً ولا يخترق الحرف
             val outlineWidthPx = (style.outlineWidth * fontScaleUsed).toFloat().coerceIn(1.5f, fontPx * 0.12f)
             val shadowPx = (style.shadowWidth * fontScaleUsed).toFloat().coerceAtMost(fontPx * 0.2f)
 
@@ -79,7 +77,6 @@ fun SubtitleOverlay(
                 overflow = TextOverflow.Visible,
             )
 
-            // حساب الموضع مع الحفاظ على الكلمات الطويلة داخل حدود الشاشة
             val topLeft = computeTopLeftSafe(
                 alignment = style.alignment,
                 pos = info.pos,
@@ -91,7 +88,6 @@ fun SubtitleOverlay(
                 canvasHeight = size.height,
             )
 
-            // 1. رسم الظل في الخلفية
             if (shadowPx > 0f) {
                 drawText(
                     textLayoutResult = layout,
@@ -101,7 +97,6 @@ fun SubtitleOverlay(
                 )
             }
 
-            // 2. رسم الحدود الخارجية العريضة
             if (outlineWidthPx > 0f) {
                 drawText(
                     textLayoutResult = layout,
@@ -111,7 +106,6 @@ fun SubtitleOverlay(
                 )
             }
 
-            // 3. رسم الحرف المصمت الممتلئ فوق التحديد (يمنع التشويه والتفريغ نهائياً)
             drawText(
                 textLayoutResult = layout,
                 topLeft = topLeft,
@@ -152,7 +146,6 @@ private fun stripAssTags(text: String): String {
         .trim()
 }
 
-/** حساب الموضع بدقة مع حماية النص من الخروج خارج الشاشة */
 private fun computeTopLeftSafe(
     alignment: Int,
     pos: Pair<Int, Int>?,
@@ -166,12 +159,8 @@ private fun computeTopLeftSafe(
     if (pos != null) {
         val ax = pos.first * scaleX
         val ay = pos.second * scaleY
-        
-        // حساب الموضع بناء على النقطة
         var x = ax - layoutWidth / 2f
         var y = ay - layoutHeight / 2f
-
-        // منع النص من الاصطدام بالحافة اليسرى أو الخروج خارج الشاشة
         x = x.coerceIn(8f, (canvasWidth - layoutWidth - 8f).coerceAtLeast(8f))
         y = y.coerceIn(8f, (canvasHeight - layoutHeight - 8f).coerceAtLeast(8f))
         return Offset(x, y)
