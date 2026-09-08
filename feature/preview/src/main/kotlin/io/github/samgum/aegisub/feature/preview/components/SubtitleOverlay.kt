@@ -134,6 +134,18 @@ fun SubtitleOverlay(
     }
 }
 
+/** استخراج أوامر رسم الفيكتور بعد وسم \p1 */
+private fun extractDrawingCommands(text: String): String? {
+    val pMatch = Regex("""\\p([1-9])""").find(text) ?: return null
+    val afterP = text.substring(pMatch.range.last + 1)
+    val closeBrace = afterP.indexOf('}')
+    val drawingBody = if (closeBrace >= 0) afterP.substring(closeBrace + 1) else afterP
+    val p0Idx = drawingBody.indexOf("""\p0""")
+    val rawDrawing = if (p0Idx >= 0) drawingBody.substring(0, p0Idx) else drawingBody
+    val clean = rawDrawing.replace(Regex("""\{[^}]*\}"""), "").trim()
+    return if (clean.isNotBlank()) clean else null
+}
+
 private fun parseInlineColor(raw: String): Color? {
     val regex = Regex("""\\(?:c|1c)&H([0-9a-fA-F]+)&?""")
     val match = regex.find(raw) ?: return null
