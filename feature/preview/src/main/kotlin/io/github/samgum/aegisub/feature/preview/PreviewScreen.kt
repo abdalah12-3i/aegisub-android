@@ -213,23 +213,26 @@ private fun VideoBlock(
     vtActive: Boolean,
     vtToolMode: VisualToolMode,
     onVtToolModeChange: (VisualToolMode) -> Unit,
-    videoMaxHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
     val selectedEvent = state.script.events.firstOrNull { it.id == state.selectedEventId }
-    val playResX = state.script.getScriptInfo("PlayResX")?.toIntOrNull() ?: 384
-    val playResY = state.script.getScriptInfo("PlayResY")?.toIntOrNull() ?: 288
+    val playResX = state.script.getScriptInfo("PlayResX")?.toIntOrNull()?.let { if (it <= 384) 1920 else it } ?: 1920
+    val playResY = state.script.getScriptInfo("PlayResY")?.toIntOrNull()?.let { if (it <= 288) 1080 else it } ?: 1080
+
     Column(modifier) {
+        // صندوق الفيديو بنسبة 16:9 المطابقة لأبعاد الأنمي لمنع انزياح الترجمة وخروجها عن الشاشة
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(videoMaxHeight)
+                .aspectRatio(16f / 9f)
                 .background(Color.Black),
             contentAlignment = Alignment.Center,
         ) {
             PlayerSurface(player = viewModel.videoPlayer, modifier = Modifier.fillMaxSize())
             ActiveSubtitleLayer(viewModel = viewModel)
-            if (vtActive && state.hasMedia && selectedEvent != null) {
+
+            // تفعيل المحاكاة المرئية فوق الفيديو
+            if (vtActive && selectedEvent != null) {
                 VisualTypesettingOverlay(
                     playResX = playResX,
                     playResY = playResY,
@@ -242,22 +245,25 @@ private fun VideoBlock(
                     },
                 )
             }
+
             if (!state.hasMedia) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.preview_no_video), color = Color.White)
                     Button(onClick = onPickVideo) { Text(stringResource(R.string.preview_select_video)) }
                 }
             }
+
             if (vtActive) {
                 Text(
                     if (vtToolMode == VisualToolMode.POSITION) stringResource(R.string.preview_vt_pos_hint)
                     else stringResource(R.string.preview_vt_move_hint),
                     color = Color.White,
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp),
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp).background(Color(0x99000000)),
                 )
             }
         }
+
         PlaybackControls(
             playback = state.playback,
             onPlayPause = viewModel::playPause,
@@ -270,143 +276,336 @@ private fun VideoBlock(
 }
 
 @Composable
-private fun PreviewTabs(
-    panel: PreviewPanel,
-    onPanelChange: (PreviewPanel) -> Unit,
-    modifier: Modifier = Modifier,
+private fun CompactPreview(
+    state: PreviewUiState.Loaded,
+    viewModel: PreviewViewModel,
+    onPickVideo: () -> Unit,
 ) {
-    val tabs = listOf(
-        PreviewPanel.SUBTITLES to stringResource(R.string.preview_tab_subtitles),
-        PreviewPanel.AUDIO to stringResource(R.string.preview_tab_audio),
-        PreviewPanel.TIMING to stringResource(R.string.preview_tab_timing),
-        PreviewPanel.TYPES to stringResource(R.string.preview_tab_types),
-    )
-    Row(
-        modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 2.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        tabs.forEach { (p, label) ->
-            FilterChip(selected = panel == p, onClick = { onPanelChange(p) }, label = { Text(label) })
+    var vtActive by remember { mutableStateOf(false) }
+    var vtToolMode by remember { mutableStateOf(VisualToolMode.POSITION) }
+    var karaokeMode by remember { mutableStateOf(false) }
+    var showSpectrogram by remember { mutableStateOf(false) }
+    val selected = state.script.events.firstOrNull { it.id == state.selectedEventId }
+
+    Column(Modifier.fillMaxSize()) {
+        VideoBlock(
+            state = state,
+            viewModel = viewModel,
+            onPickVideo = onPickVideo,
+            vtActive = vtActive && selected != null,
+            vtToolMode = vtToolMode,
+            onVtToolModeChange = { vtToolMode = it },
+        )
+
+        // شريط الأزرار السريع (يقبل التمرير الأفقي حتى لا تختفي أزرار المحاكاة على شاشة الجوال)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
+                Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
+            }
+            Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) {
+                Text(stringResource(R.string.preview_set_start))
+            }
+            Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) {
+                Text(stringResource(R.string.preview_set_end))
+            }
+            IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
+                Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
+            }
+
+            // زر المحاكاة المرئية البارز
+            FilterChip(
+                selected = vtActive,
+                onClick = {
+                    vtActive = !vtActive
+                    // إذا لم يكن هناك سطر محدد، نحدد أول سطر تلقائياً لكي تظهر مقابض السحب فوراً
+                    if (selected == null && state.script.events.isNotEmpty()) {
+                        viewModel.selectEvent(state.script.events.first().id)
+                    }
+                },
+                label = { Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting)) },
+            )
+
+            // زر الكاريوكي
+            FilterChip(
+                selected = karaokeMode,
+                onClick = {
+                    karaokeMode = !karaokeMode
+                    if (selected == null && state.script.events.isNotEmpty()) {
+                        viewModel.selectEvent(state.script.events.first().id)
+                    }
+                },
+                label = { Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke)) },
+            )
+
+            // زر التبديل بين الموجة والمخطط الطيفي
+            TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
+                Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
+            }
+        }
+
+        // لوحة التحكم في المحاكاة عند تفعيلها
+        if (vtActive && selected != null) {
+            Column(Modifier.fillMaxWidth().heightIn(max = 160.dp).verticalScroll(rememberScrollState())) {
+                VisualTypesettingControls(
+                    event = selected,
+                    toolMode = vtToolMode,
+                    onToolModeChange = { vtToolMode = it },
+                    onRotationChange = { viewModel.setEventRotation(selected.id, it) },
+                    onFadeChange = { f, fo -> viewModel.setEventFade(selected.id, f, fo) },
+                    onClearPos = { viewModel.clearEventPos(selected.id) },
+                    onClearMove = { viewModel.clearEventMove(selected.id) },
+                    onClipChange = { x1, y1, x2, y2, inv -> viewModel.setEventClip(selected.id, x1, y1, x2, y2, inv) },
+                    onClearClip = { viewModel.clearEventClip(selected.id) },
+                )
+            }
+        } else if (karaokeMode && selected != null) {
+            KaraokeTimeline(
+                text = selected.text,
+                onCommit = { viewModel.setEventText(selected.id, it) },
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+        } else {
+            AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.height(110.dp).fillMaxWidth())
+        }
+
+        // قائمة أسطر الترجمة
+        EventListColumn(
+            events = state.script.events,
+            currentEventId = state.currentEventId,
+            selectedEventId = state.selectedEventId,
+            onSelect = viewModel::selectEvent,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun ExpandedPreview(
+    state: PreviewUiState.Loaded,
+    viewModel: PreviewViewModel,
+    onPickVideo: () -> Unit,
+) {
+    var vtActive by remember { mutableStateOf(false) }
+    var vtToolMode by remember { mutableStateOf(VisualToolMode.POSITION) }
+    var karaokeMode by remember { mutableStateOf(false) }
+    var showSpectrogram by remember { mutableStateOf(false) }
+    var sortKey by remember { mutableStateOf<io.github.samgum.aegisub.domain.edit.SortKey?>(null) }
+    var sortOrder by remember { mutableStateOf(io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING) }
+    val selected = state.script.events.firstOrNull { it.id == state.selectedEventId }
+
+    Column(Modifier.fillMaxSize()) {
+        PreviewToolbar(state, viewModel)
+        Row(Modifier.fillMaxSize().weight(1f)) {
+            Column(Modifier.weight(0.60f)) {
+                VideoBlock(
+                    state = state,
+                    viewModel = viewModel,
+                    onPickVideo = onPickVideo,
+                    vtActive = vtActive && selected != null,
+                    vtToolMode = vtToolMode,
+                    onVtToolModeChange = { vtToolMode = it },
+                )
+                SubtitleGrid(
+                    events = state.script.events,
+                    currentEventId = state.currentEventId,
+                    selectedEventId = state.selectedEventId,
+                    onSelect = viewModel::selectEvent,
+                    sortKey = sortKey,
+                    sortOrder = sortOrder,
+                    onSort = { key ->
+                        if (sortKey == key) {
+                            sortOrder = if (sortOrder == io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING)
+                                io.github.samgum.aegisub.domain.edit.SortOrder.DESCENDING
+                            else io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
+                        } else {
+                            sortKey = key
+                            sortOrder = io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
+                        }
+                        viewModel.sortLines(key, sortOrder)
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Column(Modifier.weight(0.40f)) {
+                Row(
+                    Modifier.fillMaxWidth().padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
+                        Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
+                    }
+                    FilterChip(
+                        selected = vtActive,
+                        onClick = {
+                            vtActive = !vtActive
+                            if (selected == null && state.script.events.isNotEmpty()) {
+                                viewModel.selectEvent(state.script.events.first().id)
+                            }
+                        },
+                        label = { Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting)) },
+                    )
+                    TextButton(onClick = { karaokeMode = !karaokeMode }) {
+                        Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke))
+                    }
+                }
+                if (vtActive && selected != null) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                        VisualTypesettingControls(
+                            event = selected,
+                            toolMode = vtToolMode,
+                            onToolModeChange = { vtToolMode = it },
+                            onRotationChange = { viewModel.setEventRotation(selected.id, it) },
+                            onFadeChange = { f, fo -> viewModel.setEventFade(selected.id, f, fo) },
+                            onClearPos = { viewModel.clearEventPos(selected.id) },
+                            onClearMove = { viewModel.clearEventMove(selected.id) },
+                            onClipChange = { x1, y1, x2, y2, inv -> viewModel.setEventClip(selected.id, x1, y1, x2, y2, inv) },
+                            onClearClip = { viewModel.clearEventClip(selected.id) },
+                        )
+                    }
+                } else if (karaokeMode && selected != null) {
+                    KaraokeTimeline(
+                        text = selected.text,
+                        onCommit = { viewModel.setEventText(selected.id, it) },
+                        modifier = Modifier.padding(8.dp).weight(1f),
+                    )
+                } else {
+                    AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.weight(1f))
+                }
+                HorizontalDivider()
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
+                        Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
+                    }
+                    Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_start)) }
+                    Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_end)) }
+                    IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
+                        Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
+                    }
+                }
+                selected?.let {
+                    Text(
+                        "${it.start.toAssString(false)} → ${it.end.toAssString(false)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun PreviewPanelContent(
-    panel: PreviewPanel,
-    state: PreviewUiState.Loaded,
-    viewModel: PreviewViewModel,
-    showSpectrogram: Boolean,
-    onShowSpectrogramChange: (Boolean) -> Unit,
-    vtToolMode: VisualToolMode,
-    onVtToolModeChange: (VisualToolMode) -> Unit,
+private fun SubtitleGrid(
+    events: List<AssEvent>,
+    currentEventId: Long?,
+    selectedEventId: Long?,
+    onSelect: (Long) -> Unit,
+    sortKey: io.github.samgum.aegisub.domain.edit.SortKey?,
+    sortOrder: io.github.samgum.aegisub.domain.edit.SortOrder,
+    onSort: (io.github.samgum.aegisub.domain.edit.SortKey) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val selectedEvent = state.script.events.firstOrNull { it.id == state.selectedEventId }
-    val waveform by viewModel.waveform.collectAsStateWithLifecycle()
-    val spectrogram by viewModel.spectrogram.collectAsStateWithLifecycle()
-    val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
-    when (panel) {
-        PreviewPanel.SUBTITLES -> EventListColumn(
-            events = state.script.events,
-            currentEventId = state.currentEventId,
-            selectedEventId = state.selectedEventId,
-            onSelect = viewModel::selectEvent,
-            modifier = modifier,
+    Column(modifier) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(horizontal = 6.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("#", Modifier.weight(0.05f), style = MaterialTheme.typography.labelMedium)
+            SortHeader(stringResource(R.string.preview_grid_start), Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.START, sortOrder) {
+                onSort(io.github.samgum.aegisub.domain.edit.SortKey.START)
+            }
+            SortHeader(stringResource(R.string.preview_grid_end), Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.END, sortOrder) {
+                onSort(io.github.samgum.aegisub.domain.edit.SortKey.END)
+            }
+            SortHeader(stringResource(R.string.preview_grid_style), Modifier.weight(0.14f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.STYLE, sortOrder) {
+                onSort(io.github.samgum.aegisub.domain.edit.SortKey.STYLE)
+            }
+            Text(stringResource(R.string.preview_grid_text), Modifier.weight(0.43f), style = MaterialTheme.typography.labelMedium)
+        }
+        HorizontalDivider()
+        LazyColumn(Modifier.fillMaxSize()) {
+            itemsIndexed(events, key = { _, e -> e.id }) { index, event ->
+                SubtitleGridRow(
+                    event = event,
+                    index = index,
+                    isCurrent = event.id == currentEventId,
+                    isSelected = event.id == selectedEventId,
+                    onClick = { onSelect(event.id) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortHeader(
+    label: String,
+    modifier: Modifier,
+    active: Boolean,
+    order: io.github.samgum.aegisub.domain.edit.SortOrder,
+    onClick: () -> Unit,
+) {
+    Text(
+        "$label ${if (active) (if (order == io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING) "↑" else "↓") else ""}",
+        modifier = modifier.clickable(onClick = onClick),
+        style = MaterialTheme.typography.labelMedium,
+        color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+private fun SubtitleGridRow(
+    event: AssEvent,
+    index: Int,
+    isCurrent: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val bg = when {
+        isSelected -> MaterialTheme.colorScheme.primaryContainer
+        isCurrent -> MaterialTheme.colorScheme.secondaryContainer
+        else -> Color.Transparent
+    }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(bg)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("${index + 1}", Modifier.weight(0.05f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+        Text(event.start.toAssString(false), Modifier.weight(0.19f), style = MaterialTheme.typography.bodySmall)
+        Text(event.end.toAssString(false), Modifier.weight(0.19f), style = MaterialTheme.typography.bodySmall)
+        Text(
+            event.style,
+            Modifier.weight(0.14f),
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-
-        PreviewPanel.AUDIO -> Column(modifier) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = { onShowSpectrogramChange(false) }) { Text(stringResource(R.string.preview_waveform)) }
-                TextButton(onClick = { onShowSpectrogramChange(true) }) { Text(stringResource(R.string.preview_spectrogram)) }
-            }
-            if (showSpectrogram) {
-                SpectrogramView(
-                    data = spectrogram,
-                    positionMs = state.playback.positionMs,
-                    durationMs = state.playback.durationMs,
-                )
-            } else {
-                AudioTimeline(
-                    waveform = waveform,
-                    events = state.script.events,
-                    selectedEventId = state.selectedEventId,
-                    positionMs = state.playback.positionMs,
-                    durationMs = state.playback.durationMs,
-                    onCommitDrag = { id, startMs, endMs ->
-                        viewModel.editEventTimes(id, SubTime.ofMillis(startMs), SubTime.ofMillis(endMs))
-                        viewModel.selectEvent(id)
-                    },
-                )
-            }
-        }
-
-        PreviewPanel.TIMING -> Column(modifier.verticalScroll(rememberScrollState())) {
-            if (selectedEvent != null) {
-                TimingToolbar(state = state, viewModel = viewModel)
-                TimingEditLayer(state = state, viewModel = viewModel)
-            } else {
-                Text(stringResource(R.string.timing_pick_row), modifier = Modifier.padding(16.dp))
-            }
-            HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(stringResource(R.string.preview_bookmarks), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                Button(onClick = { viewModel.addBookmark("") }) { Text(stringResource(R.string.preview_add_bookmark)) }
-            }
-            if (bookmarks.isEmpty()) {
-                Text(stringResource(R.string.preview_no_bookmarks), style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-            } else {
-                bookmarks.forEach { bm ->
-                    ListItem(
-                        headlineContent = { Text(bm.label.ifBlank { "Bookmark ${formatTime(bm.timeMs)}" }) },
-                        supportingContent = {
-                            Text(formatTime(bm.timeMs), style = MaterialTheme.typography.bodySmall)
-                        },
-                        trailingContent = {
-                            Row {
-                                TextButton(onClick = { viewModel.seekToBookmark(bm.timeMs) }) { Text(stringResource(R.string.preview_jump)) }
-                                TextButton(onClick = { viewModel.deleteBookmark(bm.id) }) { Text(stringResource(R.string.preview_delete)) }
-                            }
-                        },
-                        modifier = Modifier.clickable { viewModel.seekToBookmark(bm.timeMs) },
-                    )
-                }
-            }
-        }
-
-        PreviewPanel.TYPES -> Column(modifier.verticalScroll(rememberScrollState()).padding(8.dp)) {
-            if (selectedEvent != null && state.hasMedia) {
-                Text(stringResource(R.string.types_title), style = MaterialTheme.typography.titleSmall)
-                VisualTypesettingControls(
-                    event = selectedEvent,
-                    toolMode = vtToolMode,
-                    onToolModeChange = onVtToolModeChange,
-                    onRotationChange = { deg -> viewModel.setEventRotation(selectedEvent.id, deg) },
-                    onFadeChange = { fin, fout -> viewModel.setEventFade(selectedEvent.id, fin, fout) },
-                    onClearPos = { viewModel.clearEventPos(selectedEvent.id) },
-                    onClearMove = { viewModel.clearEventMove(selectedEvent.id) },
-                    onClipChange = { x1, y1, x2, y2, inv ->
-                        viewModel.setEventClip(selectedEvent.id, x1, y1, x2, y2, inv)
-                    },
-                    onClearClip = { viewModel.clearEventClip(selectedEvent.id) },
-                )
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                Text(stringResource(R.string.preview_karaoke_timing), style = MaterialTheme.typography.titleSmall)
-                KaraokeTimeline(
-                    text = selectedEvent.text,
-                    onCommit = { viewModel.setEventText(selectedEvent.id, it) },
-                )
-            } else {
-                Text(stringResource(R.string.types_pick_row), modifier = Modifier.padding(16.dp))
-            }
-        }
+        Text(
+            event.strippedText.ifBlank { stringResource(R.string.subtitle_no_text) },
+            Modifier.weight(0.43f),
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            color = if (event.comment) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
 
@@ -432,6 +631,7 @@ private fun VisualTypesettingControls(
     var cx2 by remember(event.id) { mutableStateOf((existingClip?.x2 ?: 0).toString()) }
     var cy2 by remember(event.id) { mutableStateOf((existingClip?.y2 ?: 0).toString()) }
     var clipInverse by remember(event.id) { mutableStateOf(existingClip?.inverse ?: false) }
+
     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             FilterChip(
@@ -452,6 +652,7 @@ private fun VisualTypesettingControls(
                 Text(if (toolMode == VisualToolMode.MOVE) stringResource(R.string.preview_clear_move) else stringResource(R.string.preview_clear_pos))
             }
         }
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\\fr", style = MaterialTheme.typography.labelMedium)
             Slider(
@@ -463,6 +664,7 @@ private fun VisualTypesettingControls(
             )
             Text("${slider.roundToInt()}°", style = MaterialTheme.typography.labelMedium)
         }
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\\fad", style = MaterialTheme.typography.labelMedium)
             OutlinedTextField(
@@ -485,6 +687,7 @@ private fun VisualTypesettingControls(
                 onFadeChange(fadeIn.toIntOrNull() ?: 0, fadeOut.toIntOrNull() ?: 0)
             }) { Text(stringResource(R.string.preview_apply)) }
         }
+
         HorizontalDivider(Modifier.padding(vertical = 6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("\\clip", style = MaterialTheme.typography.labelMedium)
@@ -686,335 +889,6 @@ private fun AudioBand(
 }
 
 @Composable
-private fun BookmarksSection(
-    state: PreviewUiState.Loaded,
-    viewModel: PreviewViewModel,
-    modifier: Modifier = Modifier,
-) {
-    val bookmarks by viewModel.bookmarks.collectAsStateWithLifecycle()
-    Column(modifier.fillMaxWidth()) {
-        HorizontalDivider(Modifier.padding(vertical = 6.dp))
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.preview_bookmarks), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            Button(onClick = { viewModel.addBookmark("") }) { Text(stringResource(R.string.preview_add_bookmark)) }
-        }
-        if (bookmarks.isEmpty()) {
-            Text(stringResource(R.string.preview_no_bookmarks), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp))
-        } else {
-            bookmarks.forEach { bm ->
-                ListItem(
-                    headlineContent = { Text(bm.label.ifBlank { "Bookmark ${formatTime(bm.timeMs)}" }) },
-                    supportingContent = { Text(formatTime(bm.timeMs), style = MaterialTheme.typography.bodySmall) },
-                    trailingContent = {
-                        Row {
-                            TextButton(onClick = { viewModel.seekToBookmark(bm.timeMs) }) { Text(stringResource(R.string.preview_jump)) }
-                            TextButton(onClick = { viewModel.deleteBookmark(bm.id) }) { Text(stringResource(R.string.preview_delete)) }
-                        }
-                    },
-                    modifier = Modifier.clickable { viewModel.seekToBookmark(bm.timeMs) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CompactPreview(
-    state: PreviewUiState.Loaded,
-    viewModel: PreviewViewModel,
-    onPickVideo: () -> Unit,
-) {
-    var vtActive by remember { mutableStateOf(false) }
-    var vtToolMode by remember { mutableStateOf(VisualToolMode.POSITION) }
-    var karaokeMode by remember { mutableStateOf(false) }
-    var showSpectrogram by remember { mutableStateOf(false) }
-    val selected = state.script.events.firstOrNull { it.id == state.selectedEventId }
-    Column(Modifier.fillMaxSize()) {
-        VideoBlock(
-            state = state,
-            viewModel = viewModel,
-            onPickVideo = onPickVideo,
-            vtActive = vtActive && selected != null && state.hasMedia,
-            vtToolMode = vtToolMode,
-            onVtToolModeChange = { vtToolMode = it },
-            videoMaxHeight = 200.dp,
-        )
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
-                Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
-            }
-            Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_start)) }
-            Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_end)) }
-            IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
-                Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
-            }
-            Spacer(Modifier.weight(1f))
-            TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
-                Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
-            }
-            TextButton(onClick = { vtActive = !vtActive }) {
-                Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting))
-            }
-            TextButton(onClick = { karaokeMode = !karaokeMode }) {
-                Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke))
-            }
-        }
-        if (vtActive && selected != null && state.hasMedia) {
-            Column(Modifier.fillMaxWidth().heightIn(max = 170.dp).verticalScroll(rememberScrollState())) {
-                VisualTypesettingControls(
-                    event = selected,
-                    toolMode = vtToolMode,
-                    onToolModeChange = { vtToolMode = it },
-                    onRotationChange = { viewModel.setEventRotation(selected.id, it) },
-                    onFadeChange = { f, fo -> viewModel.setEventFade(selected.id, f, fo) },
-                    onClearPos = { viewModel.clearEventPos(selected.id) },
-                    onClearMove = { viewModel.clearEventMove(selected.id) },
-                    onClipChange = { x1, y1, x2, y2, inv -> viewModel.setEventClip(selected.id, x1, y1, x2, y2, inv) },
-                    onClearClip = { viewModel.clearEventClip(selected.id) },
-                )
-            }
-        } else if (karaokeMode && selected != null) {
-            KaraokeTimeline(
-                text = selected.text,
-                onCommit = { viewModel.setEventText(selected.id, it) },
-                modifier = Modifier.padding(horizontal = 8.dp),
-            )
-        } else {
-            AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.height(110.dp).fillMaxWidth())
-        }
-        EventListColumn(
-            events = state.script.events,
-            currentEventId = state.currentEventId,
-            selectedEventId = state.selectedEventId,
-            onSelect = viewModel::selectEvent,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun ExpandedPreview(
-    state: PreviewUiState.Loaded,
-    viewModel: PreviewViewModel,
-    onPickVideo: () -> Unit,
-) {
-    var vtActive by remember { mutableStateOf(false) }
-    var vtToolMode by remember { mutableStateOf(VisualToolMode.POSITION) }
-    var karaokeMode by remember { mutableStateOf(false) }
-    var showSpectrogram by remember { mutableStateOf(false) }
-    var sortKey by remember { mutableStateOf<io.github.samgum.aegisub.domain.edit.SortKey?>(null) }
-    var sortOrder by remember { mutableStateOf(io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING) }
-    val selected = state.script.events.firstOrNull { it.id == state.selectedEventId }
-    Column(Modifier.fillMaxSize()) {
-        PreviewToolbar(state, viewModel)
-        Row(Modifier.fillMaxSize().weight(1f)) {
-            Column(Modifier.weight(0.60f)) {
-                VideoBlock(
-                    state = state,
-                    viewModel = viewModel,
-                    onPickVideo = onPickVideo,
-                    vtActive = vtActive && selected != null && state.hasMedia,
-                    vtToolMode = vtToolMode,
-                    onVtToolModeChange = { vtToolMode = it },
-                    videoMaxHeight = 160.dp,
-                )
-                SubtitleGrid(
-                    events = state.script.events,
-                    currentEventId = state.currentEventId,
-                    selectedEventId = state.selectedEventId,
-                    onSelect = viewModel::selectEvent,
-                    sortKey = sortKey,
-                    sortOrder = sortOrder,
-                    onSort = { key ->
-                        if (sortKey == key) {
-                            sortOrder = if (sortOrder == io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING)
-                                io.github.samgum.aegisub.domain.edit.SortOrder.DESCENDING
-                            else io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
-                        } else {
-                            sortKey = key
-                            sortOrder = io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING
-                        }
-                        viewModel.sortLines(key, sortOrder)
-                    },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            Column(Modifier.weight(0.40f)) {
-                Row(
-                    Modifier.fillMaxWidth().padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(onClick = { showSpectrogram = !showSpectrogram }) {
-                        Text(if (showSpectrogram) stringResource(R.string.preview_waveform) else stringResource(R.string.preview_spectrogram))
-                    }
-                    TextButton(onClick = { vtActive = !vtActive }) {
-                        Text(if (vtActive) stringResource(R.string.preview_exit_typesetting) else stringResource(R.string.preview_typesetting))
-                    }
-                    TextButton(onClick = { karaokeMode = !karaokeMode }) {
-                        Text(if (karaokeMode) stringResource(R.string.preview_exit_karaoke) else stringResource(R.string.preview_karaoke))
-                    }
-                }
-                if (vtActive && selected != null && state.hasMedia) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                        VisualTypesettingControls(
-                            event = selected,
-                            toolMode = vtToolMode,
-                            onToolModeChange = { vtToolMode = it },
-                            onRotationChange = { viewModel.setEventRotation(selected.id, it) },
-                            onFadeChange = { f, fo -> viewModel.setEventFade(selected.id, f, fo) },
-                            onClearPos = { viewModel.clearEventPos(selected.id) },
-                            onClearMove = { viewModel.clearEventMove(selected.id) },
-                            onClipChange = { x1, y1, x2, y2, inv -> viewModel.setEventClip(selected.id, x1, y1, x2, y2, inv) },
-                            onClearClip = { viewModel.clearEventClip(selected.id) },
-                        )
-                    }
-                } else if (karaokeMode && selected != null) {
-                    KaraokeTimeline(
-                        text = selected.text,
-                        onCommit = { viewModel.setEventText(selected.id, it) },
-                        modifier = Modifier.padding(8.dp).weight(1f),
-                    )
-                } else {
-                    AudioBand(state, viewModel, showSpectrogram, { showSpectrogram = it }, Modifier.weight(1f))
-                }
-                HorizontalDivider()
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(onClick = viewModel::selectPrevEvent, enabled = selected != null) {
-                        Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
-                    }
-                    Button(onClick = { selected?.let { viewModel.setStartToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_start)) }
-                    Button(onClick = { selected?.let { viewModel.setEndToPosition(it.id) } }, enabled = selected != null) { Text(stringResource(R.string.preview_set_end)) }
-                    IconButton(onClick = viewModel::selectNextEvent, enabled = selected != null) {
-                        Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
-                    }
-                }
-                selected?.let {
-                    Text(
-                        "${it.start.toAssString(false)} → ${it.end.toAssString(false)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SubtitleGrid(
-    events: List<AssEvent>,
-    currentEventId: Long?,
-    selectedEventId: Long?,
-    onSelect: (Long) -> Unit,
-    sortKey: io.github.samgum.aegisub.domain.edit.SortKey?,
-    sortOrder: io.github.samgum.aegisub.domain.edit.SortOrder,
-    onSort: (io.github.samgum.aegisub.domain.edit.SortKey) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-                .padding(horizontal = 6.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("#", Modifier.weight(0.05f), style = MaterialTheme.typography.labelMedium)
-            SortHeader(stringResource(R.string.preview_grid_start), Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.START, sortOrder) {
-                onSort(io.github.samgum.aegisub.domain.edit.SortKey.START)
-            }
-            SortHeader(stringResource(R.string.preview_grid_end), Modifier.weight(0.19f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.END, sortOrder) {
-                onSort(io.github.samgum.aegisub.domain.edit.SortKey.END)
-            }
-            SortHeader(stringResource(R.string.preview_grid_style), Modifier.weight(0.14f), sortKey == io.github.samgum.aegisub.domain.edit.SortKey.STYLE, sortOrder) {
-                onSort(io.github.samgum.aegisub.domain.edit.SortKey.STYLE)
-            }
-            Text(stringResource(R.string.preview_grid_text), Modifier.weight(0.43f), style = MaterialTheme.typography.labelMedium)
-        }
-        HorizontalDivider()
-        LazyColumn(Modifier.fillMaxSize()) {
-            itemsIndexed(events, key = { _, e -> e.id }) { index, event ->
-                SubtitleGridRow(
-                    event = event,
-                    index = index,
-                    isCurrent = event.id == currentEventId,
-                    isSelected = event.id == selectedEventId,
-                    onClick = { onSelect(event.id) },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SortHeader(
-    label: String,
-    modifier: Modifier,
-    active: Boolean,
-    order: io.github.samgum.aegisub.domain.edit.SortOrder,
-    onClick: () -> Unit,
-) {
-    Text(
-        "$label ${if (active) (if (order == io.github.samgum.aegisub.domain.edit.SortOrder.ASCENDING) "↑" else "↓") else ""}",
-        modifier = modifier.clickable(onClick = onClick),
-        style = MaterialTheme.typography.labelMedium,
-        color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-    )
-}
-
-@Composable
-private fun SubtitleGridRow(
-    event: AssEvent,
-    index: Int,
-    isCurrent: Boolean,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-) {
-    val bg = when {
-        isSelected -> MaterialTheme.colorScheme.primaryContainer
-        isCurrent -> MaterialTheme.colorScheme.secondaryContainer
-        else -> Color.Transparent
-    }
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(bg)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("${index + 1}", Modifier.weight(0.05f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-        Text(event.start.toAssString(false), Modifier.weight(0.19f), style = MaterialTheme.typography.bodySmall)
-        Text(event.end.toAssString(false), Modifier.weight(0.19f), style = MaterialTheme.typography.bodySmall)
-        Text(
-            event.style,
-            Modifier.weight(0.14f),
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            event.strippedText.ifBlank { stringResource(R.string.subtitle_no_text) },
-            Modifier.weight(0.43f),
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            color = if (event.comment) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-@Composable
 private fun EventListColumn(
     events: List<AssEvent>,
     currentEventId: Long?,
@@ -1061,46 +935,6 @@ private fun PreviewEventRow(event: AssEvent, isCurrent: Boolean, isSelected: Boo
         },
         modifier = Modifier.background(bg).clickable(onClick = onClick),
     )
-}
-
-@Composable
-private fun TimingEditLayer(state: PreviewUiState.Loaded, viewModel: PreviewViewModel) {
-    val event = state.script.events.firstOrNull { it.id == state.selectedEventId } ?: return
-    var target by remember(state.selectedEventId) { mutableStateOf(NudgeTarget.START) }
-    TimingEditPanel(
-        startMs = event.start.millis,
-        endMs = event.end.millis,
-        durationMs = state.playback.durationMs,
-        nudgeTarget = target,
-        onNudgeTargetChange = { target = it },
-        onSeek = viewModel::seekTo,
-        onCommitStart = { ms -> viewModel.editEventTimes(event.id, SubTime.ofMillis(ms), event.end) },
-        onCommitEnd = { ms -> viewModel.editEventTimes(event.id, event.start, SubTime.ofMillis(ms)) },
-        onNudge = { delta ->
-            when (target) {
-                NudgeTarget.START -> viewModel.nudgeStart(delta)
-                NudgeTarget.END -> viewModel.nudgeEnd(delta)
-            }
-        },
-    )
-}
-
-@Composable
-private fun TimingToolbar(state: PreviewUiState.Loaded, viewModel: PreviewViewModel) {
-    val id = state.selectedEventId ?: return
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = viewModel::selectPrevEvent) {
-            Icon(Icons.Filled.SkipPrevious, contentDescription = stringResource(R.string.preview_prev_line))
-        }
-        Button(onClick = { viewModel.setStartToPosition(id) }) { Text(stringResource(R.string.preview_set_start)) }
-        Button(onClick = { viewModel.setEndToPosition(id) }) { Text(stringResource(R.string.preview_set_end)) }
-        IconButton(onClick = viewModel::selectNextEvent) {
-            Icon(Icons.Filled.SkipNext, contentDescription = stringResource(R.string.preview_next_line))
-        }
-    }
 }
 
 private fun formatTime(ms: Long): String {
