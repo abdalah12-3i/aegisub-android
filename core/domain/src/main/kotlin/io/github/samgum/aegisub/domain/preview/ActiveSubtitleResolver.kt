@@ -48,7 +48,6 @@ object ActiveSubtitleResolver {
                 right = style.margins.right + event.margins.right,
                 vertical = style.margins.vertical + event.margins.vertical,
             )
-            // إرسال النص الأصلي كاملاً مع وسوم الألوان والمواضع بدلاً من تجريدها
             SubtitleRenderInfo(
                 text = event.text,
                 style = style,
