@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -57,6 +58,22 @@ fun SubtitleOverlay(
             val outlineWidthPx = (style.outlineWidth * fontScaleUsed).toFloat().coerceIn(1.5f, fontPx * 0.12f)
             val shadowPx = (style.shadowWidth * fontScaleUsed).toFloat().coerceAtMost(fontPx * 0.2f)
 
+            // 1. فحص إذا كان السطر عبارة عن رسم فيكتور \p1
+            val drawingCommands = extractDrawingCommands(info.text)
+            if (drawingCommands != null) {
+                val originX = if (info.pos != null) info.pos.first * scaleX else 0f
+                val originY = if (info.pos != null) info.pos.second * scaleY else 0f
+                val drawingPath = parseAssDrawing(drawingCommands, originX, originY, scaleX, scaleY)
+                if (drawingPath != null) {
+                    if (outlineWidthPx > 0f) {
+                        drawPath(path = drawingPath, color = style.outline.toColor(), style = Stroke(width = outlineWidthPx * 2f))
+                    }
+                    drawPath(path = drawingPath, color = parsedColor, style = Fill)
+                }
+                return@forEach
+            }
+
+            // 2. معالجة ورسم النصوص العادية
             val customFamily = FontManager.getFontFamily(context, parsedFontName)
 
             val baseStyle = TextStyle(
@@ -113,6 +130,89 @@ fun SubtitleOverlay(
                 drawStyle = Fill,
             )
         }
+    }
+}
+
+/** استخراج أوامر رسم الفيكتور بعد وسم \p1 */
+private fun extractDrawingCommands(text: String): String? {
+    val pMatch = Regex("""\\p([1-9])""").find(text) ?: return null
+    val afterP = text.substring(pMatch.range.last + 1)
+    val closeBrace = afterP.indexOf('}')
+    val drawingBody = if (closeBrace >= 0) afterP.substring(closeBrace + 1) else afterP
+    val p0Idx = drawingBody.indexOf("""\p0""")
+    val rawDrawing = if (p0Idx >= 0) drawingBody.substring(0, p0Idx) else drawingBody
+    val clean = rawDrawing.replace(Regex("""\{[^}]*\}"""), "").trim()
+    return if (clean.isNotBlank()) clean else null
+}
+
+/** فك شفرة مسار الرسم الهندسية m, l, b, c وتحويلها إلى Path في Compose */
+private fun parseAssDrawing(
+    drawingText: String,
+    originX: Float,
+    originY: Float,
+    scaleX: Float,
+    scaleY: Float,
+): Path? {
+    val tokens = drawingText.trim().split(Regex("""\s+""")).filter { it.isNotEmpty() }
+    if (tokens.isEmpty()) return null
+    val path = Path()
+    var i = 0
+    var currentCmd = ""
+
+    try {
+        while (i < tokens.size) {
+            val token = tokens[i]
+            val firstChar = token[0].lowercaseChar()
+            if (firstChar in listOf('m', 'l', 'b', 'c', 'n')) {
+                currentCmd = firstChar.toString()
+                i++
+                continue
+            }
+            when (currentCmd) {
+                "m", "n" -> {
+                    if (i + 1 < tokens.size) {
+                        val x = tokens[i].toFloatOrNull() ?: 0f
+                        val y = tokens[i + 1].toFloatOrNull() ?: 0f
+                        path.moveTo(originX + x * scaleX, originY + y * scaleY)
+                        i += 2
+                        currentCmd = "l" // النقاط اللاحقة تعامل كخط مستقيم تلقائياً
+                    } else i++
+                }
+                "l" -> {
+                    if (i + 1 < tokens.size) {
+                        val x = tokens[i].toFloatOrNull() ?: 0f
+                        val y = tokens[i + 1].toFloatOrNull() ?: 0f
+                        path.lineTo(originX + x * scaleX, originY + y * scaleY)
+                        i += 2
+                    } else i++
+                }
+                "b" -> {
+                    if (i + 5 < tokens.size) {
+                        val x1 = tokens[i].toFloatOrNull() ?: 0f
+                        val y1 = tokens[i + 1].toFloatOrNull() ?: 0f
+                        val x2 = tokens[i + 2].toFloatOrNull() ?: 0f
+                        val y2 = tokens[i + 3].toFloatOrNull() ?: 0f
+                        val x3 = tokens[i + 4].toFloatOrNull() ?: 0f
+                        val y3 = tokens[i + 5].toFloatOrNull() ?: 0f
+                        path.cubicTo(
+                            originX + x1 * scaleX, originY + y1 * scaleY,
+                            originX + x2 * scaleX, originY + y2 * scaleY,
+                            originX + x3 * scaleX, originY + y3 * scaleY,
+                        )
+                        i += 6
+                    } else i++
+                }
+                "c" -> {
+                    path.close()
+                    currentCmd = ""
+                }
+                else -> i++
+            }
+        }
+        path.close()
+        return path
+    } catch (e: Exception) {
+        return null
     }
 }
 
