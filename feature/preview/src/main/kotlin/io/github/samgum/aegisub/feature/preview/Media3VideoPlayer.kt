@@ -5,6 +5,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -20,17 +21,23 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ExoPlayer 封装：监听状态/参数 → 回填 [state]；播放时协程周期(≈50ms)采样位置。
- * [exoPlayer] 暴露给 PlayerView 绑定（仅预览模块内使用）。
- *
- * @author 伤感咩吖
- */
 class Media3VideoPlayer @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : VideoPlayer {
 
-    val exoPlayer: ExoPlayer = ExoPlayer.Builder(context).build()
+    // ضبط استهلاك الذاكرة المؤقتة ليكون خفيفاً وسلساً جداً على الهواتف الاقتصادية
+    private val lightweightLoadControl = DefaultLoadControl.Builder()
+        .setBufferDurationsMs(
+            2_000,  // الحد الأدنى للمخزن المؤقت (2 ثانية)
+            5_000,  // الحد الأقصى للمخزن المؤقت (5 ثوانٍ فقط لمنع امتلاء الرام)
+            1_000,  // سرعة بدء التشغيل
+            1_500,  // إعادة التشغيل بعد الـ Seek
+        )
+        .build()
+
+    val exoPlayer: ExoPlayer = ExoPlayer.Builder(context)
+        .setLoadControl(lightweightLoadControl)
+        .build()
 
     private val _state = MutableStateFlow(PlaybackState())
     override val state: StateFlow<PlaybackState> = _state.asStateFlow()
@@ -62,13 +69,11 @@ class Media3VideoPlayer @Inject constructor(
             }
 
             override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
-                // 帧率在轨道就绪后由 videoFormat 提供；此处顺带再探一次
                 readFps()
             }
         })
     }
 
-    /** 从当前视频 Format 读取帧率写入 [state]；未知（C.LENGTH_UNSET）记为 0。 */
     private fun readFps() {
         val formatFps = exoPlayer.videoFormat?.frameRate ?: Format.NO_VALUE.toFloat()
         val fps = if (formatFps > 0f) formatFps else 0f
@@ -96,7 +101,6 @@ class Media3VideoPlayer @Inject constructor(
     }
 
     override fun seekNextFrame() {
-        // 前进一帧：帧率已知用 1000/fps，未知按 30fps(≈33ms) 近似；ExoPlayer 会落到最近帧
         if (!_state.value.isReady) return
         val fps = _state.value.fps.let { if (it > 0f) it else 30f }
         val frameMs = (1000.0f / fps).toLong().coerceAtLeast(1L)
@@ -107,7 +111,6 @@ class Media3VideoPlayer @Inject constructor(
     }
 
     override fun seekPreviousFrame() {
-        // 后退一帧：帧率已知用 1000/fps，未知按 30fps(≈33ms) 近似
         if (!_state.value.isReady) return
         val fps = _state.value.fps.let { if (it > 0f) it else 30f }
         val frameMs = (1000.0f / fps).toLong().coerceAtLeast(1L)
