@@ -11,6 +11,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -21,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.sp
 import io.github.samgum.aegisub.data.font.FontManager
+import io.github.samgum.aegisub.domain.edit.VisualTags
 import io.github.samgum.aegisub.domain.model.AssColor
 import io.github.samgum.aegisub.domain.preview.SubtitleRenderInfo
 
@@ -47,9 +51,14 @@ fun SubtitleOverlay(
             val scaleY = (size.height / resY.toFloat()).coerceAtLeast(0.001f)
             val scaleX = (size.width / resX.toFloat()).coerceAtLeast(0.001f)
 
+            // قراءة الوسوم التفاعلية
             val parsedColor = parseInlineColor(info.text) ?: style.primary.toColor()
             val parsedFontName = parseInlineFont(info.text) ?: style.font
             val parsedFontSize = parseInlineFontSize(info.text) ?: style.fontSize
+            val rotationDeg = VisualTags.getRotation(info.text).toFloat().let { if (it == 0f) style.angle.toFloat() else it }
+            val scaleXFactor = parseInlineScale(info.text, "fscx") ?: (style.scaleX.toFloat() / 100f)
+            val scaleYFactor = parseInlineScale(info.text, "fscy") ?: (style.scaleY.toFloat() / 100f)
+            val clipRect = VisualTags.getClip(info.text)
 
             val rawFontPx = (parsedFontSize * scaleY).toFloat()
             val fontPx = rawFontPx.coerceIn(10f, size.height * 0.30f)
@@ -58,7 +67,7 @@ fun SubtitleOverlay(
             val outlineWidthPx = (style.outlineWidth * fontScaleUsed).toFloat().coerceIn(1.5f, fontPx * 0.12f)
             val shadowPx = (style.shadowWidth * fontScaleUsed).toFloat().coerceAtMost(fontPx * 0.2f)
 
-            // 1. فحص ومعالجة رسم مسارات الفيكتور \p1
+            // 1. معالجة رسم مسارات الفيكتور \p1
             val drawingCommands = extractDrawingCommands(info.text)
             if (drawingCommands != null) {
                 val currentPos = info.pos
@@ -106,35 +115,70 @@ fun SubtitleOverlay(
                 canvasHeight = size.height,
             )
 
-            if (shadowPx > 0f) {
-                drawText(
-                    textLayoutResult = layout,
-                    topLeft = Offset(topLeft.x + shadowPx, topLeft.y + shadowPx),
-                    color = style.shadow.toColor(),
-                    drawStyle = Fill,
-                )
+            val centerX = topLeft.x + layout.size.width / 2f
+            val centerY = topLeft.y + layout.size.height / 2f
+
+            // دالة الرسم الداخلية المطبقة لجميع التأثيرات
+            val drawContent: DrawScope.() -> Unit = {
+                rotate(degrees = rotationDeg, pivot = Offset(centerX, centerY)) {
+                    scale(scaleX = scaleXFactor, scaleY = scaleYFactor, pivot = Offset(centerX, centerY)) {
+                        if (shadowPx > 0f) {
+                            drawText(
+                                textLayoutResult = layout,
+                                topLeft = Offset(topLeft.x + shadowPx, topLeft.y + shadowPx),
+                                color = style.shadow.toColor(),
+                                drawStyle = Fill,
+                            )
+                        }
+                        if (outlineWidthPx > 0f) {
+                            drawText(
+                                textLayoutResult = layout,
+                                topLeft = topLeft,
+                                color = style.outline.toColor(),
+                                drawStyle = Stroke(width = outlineWidthPx * 2f),
+                            )
+                        }
+                        drawText(
+                            textLayoutResult = layout,
+                            topLeft = topLeft,
+                            color = parsedColor,
+                            drawStyle = Fill,
+                        )
+                    }
+                }
             }
 
-            if (outlineWidthPx > 0f) {
-                drawText(
-                    textLayoutResult = layout,
-                    topLeft = topLeft,
-                    color = style.outline.toColor(),
-                    drawStyle = Stroke(width = outlineWidthPx * 2f),
-                )
-            }
+            // تطبيق القص \clip إذا كان موجوداً
+            if (clipRect != null) {
+                val cx1 = clipRect.x1 * scaleX
+                val cy1 = clipRect.y1 * scaleY
+                val cx2 = clipRect.x2 * scaleX
+                val cy2 = clipRect.y2 * scaleY
+                val left = minOf(cx1, cx2)
+                val top = minOf(cy1, cy2)
+                val right = maxOf(cx1, cx2)
+                val bottom = maxOf(cy1, cy2)
 
-            drawText(
-                textLayoutResult = layout,
-                topLeft = topLeft,
-                color = parsedColor,
-                drawStyle = Fill,
-            )
+                if (!clipRect.inverse) {
+                    clipRect(left = left, top = top, right = right, bottom = bottom) {
+                        drawContent()
+                    }
+                } else {
+                    drawContent()
+                }
+            } else {
+                drawContent()
+            }
         }
     }
 }
 
-/** استخراج أوامر رسم الفيكتور بعد وسم \p1 */
+private fun parseInlineScale(text: String, tag: String): Float? {
+    val regex = Regex("""\\$tag([0-9]+(?:\.[0-9]+)?)""")
+    val match = regex.find(text) ?: return null
+    return (match.groupValues[1].toFloatOrNull() ?: 100f) / 100f
+}
+
 private fun extractDrawingCommands(text: String): String? {
     val pMatch = Regex("""\\p([1-9])""").find(text) ?: return null
     val afterP = text.substring(pMatch.range.last + 1)
